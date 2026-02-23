@@ -1,0 +1,29 @@
+
+{
+  "placeholderImages": [
+    {
+      "id": "van-image",
+      "description": "Company transport van",
+      "imageUrl": "https://picsum.photos/seed/fleet1/800/600",
+      "imageHint": "white van"
+    },
+    {
+      "id": "sedan-image",
+      "description": "Executive sedan vehicle",
+      "imageUrl": "https://picsum.photos/seed/fleet2/800/600",
+      "imageHint": "luxury sedan"
+    },
+    {
+      "id": "pickup-image",
+      "description": "Utility pickup truck",
+      "imageUrl": "https://picsum.photos/seed/fleet3/800/600",
+      "imageHint": "pickup truck"
+    },
+    {
+      "id": "office-fleet",
+      "description": "Fleet of cars in a parking lot",
+      "imageUrl": "https://picsum.photos/seed/fleet4/1200/800",
+      "imageHint": "car parking"
+    }
+  ]
+}
