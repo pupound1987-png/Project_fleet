@@ -31,7 +31,7 @@ service cloud.firestore {
     }
 
     match /roles_admin/{adminId} {
-      allow read: if isSignedIn(); // Allow all signed in users to check if someone is admin
+      allow read: if isSignedIn();
       allow write: if isAdmin();
     }
 
@@ -41,7 +41,8 @@ service cloud.firestore {
     }
 
     match /bookings/{bookingId} {
-      // Allow reading bookings for signed in users (required for calendar and general visibility)
+      // Allow list and get for all signed in users so they can see availability and history
+      // Authorization is primarily focused on WHO can create/update
       allow read: if isSignedIn();
 
       allow create: if isSignedIn() 
