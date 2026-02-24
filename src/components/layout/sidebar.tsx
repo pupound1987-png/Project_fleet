@@ -12,7 +12,8 @@ import {
   ShieldCheck, 
   Settings,
   LogOut,
-  PlusCircle
+  PlusCircle,
+  BellRing
 } from "lucide-react";
 
 import {
@@ -40,6 +41,7 @@ const navItems = [
 const adminItems = [
   { title: "Approvals", titleTh: "การอนุมัติ", href: "/admin/approvals", icon: ShieldCheck },
   { title: "Fleet Management", titleTh: "จัดการฟลีทรถ", href: "/admin/fleet", icon: Settings },
+  { title: "Line Settings", titleTh: "ตั้งค่าแจ้งเตือน", href: "/admin/settings", icon: BellRing },
 ];
 
 export function AppSidebar() {

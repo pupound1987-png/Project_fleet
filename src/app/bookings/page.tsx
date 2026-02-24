@@ -30,12 +30,12 @@ export default function BookingsPage() {
     e.preventDefault();
     setLoading(true);
     
-    // Simulate API call
+    // Simulate API call and Line notification
     setTimeout(() => {
       setLoading(false);
       toast({
         title: "Booking Requested | ส่งคำขอจองแล้ว",
-        description: "Your vehicle request has been sent to admin for approval. (คำขอของคุณถูกส่งไปยังผู้ดูแลระบบเพื่อรอการอนุมัติ)",
+        description: "Your vehicle request has been sent to admin and Line notification triggered. (คำขอของคุณส่งไปแล้วและแจ้งเตือนผ่าน Line เรียบร้อย)",
       });
       router.push("/");
     }, 1500);
