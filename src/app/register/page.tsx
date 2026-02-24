@@ -35,18 +35,29 @@ export default function RegisterPage() {
       // 2. Update Profile Display Name
       await updateProfile(user, { displayName: name });
 
+      // Check if this is the designated admin email
+      const role = email.toLowerCase() === 'admin@tcitrendgroup' ? 'Admin' : 'Employee';
+
       // 3. Create User Document in Firestore
       await setDoc(doc(db, "users", user.uid), {
         email: user.email,
         name: name,
-        department: "General", // Default department
-        role: "Employee",      // Default role
+        department: "General",
+        role: role,
         createdAt: new Date().toISOString()
       });
 
+      // 4. If Admin, also add to roles_admin collection as per backend.json structure
+      if (role === 'Admin') {
+        await setDoc(doc(db, "roles_admin", user.uid), {
+          active: true,
+          email: user.email
+        });
+      }
+
       toast({
         title: "Success | สำเร็จ",
-        description: "Your account has been created. (สร้างบัญชีผู้ใช้เรียบร้อยแล้ว)",
+        description: `Your account has been created as ${role}. (สร้างบัญชีผู้ใช้ในฐานะ ${role} เรียบร้อยแล้ว)`,
       });
       
       router.push("/");

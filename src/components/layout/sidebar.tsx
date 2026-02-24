@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -29,8 +30,9 @@ import {
   SidebarGroupContent,
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useUser, useAuth } from "@/firebase";
+import { useUser, useAuth, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { signOut } from "firebase/auth";
+import { doc } from "firebase/firestore";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -51,7 +53,17 @@ export function AppSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const auth = useAuth();
+  const db = useFirestore();
   const { user } = useUser();
+
+  // Fetch user profile to check role
+  const profileRef = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return doc(db, "users", user.uid);
+  }, [db, user]);
+
+  const { data: profile } = useDoc(profileRef);
+  const isAdmin = profile?.role === 'Admin';
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -101,33 +113,35 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarGroup className="mt-4">
-          <SidebarGroupLabel className="text-slate-400 px-4 mb-2 uppercase tracking-widest text-[10px] font-bold">Admin | ผู้ดูแล</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu className="px-2 space-y-1">
-              {adminItems.map((item) => (
-                <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton 
-                    asChild 
-                    isActive={pathname === item.href}
-                    className={cn(
-                      "rounded-xl transition-all duration-200 py-6",
-                      pathname === item.href ? "bg-accent/10 text-accent" : "hover:bg-white/5"
-                    )}
-                  >
-                    <Link href={item.href} className="flex items-center gap-3 w-full">
-                      <item.icon className={cn("w-5 h-5", pathname === item.href ? "text-accent" : "text-slate-400")} />
-                      <div className="flex flex-col flex-1">
-                        <span className="text-sm font-bold">{item.titleTh}</span>
-                        <span className="text-[10px] opacity-60 font-medium">{item.title}</span>
-                      </div>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {isAdmin && (
+          <SidebarGroup className="mt-4">
+            <SidebarGroupLabel className="text-slate-400 px-4 mb-2 uppercase tracking-widest text-[10px] font-bold">Admin | ผู้ดูแล</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu className="px-2 space-y-1">
+                {adminItems.map((item) => (
+                  <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton 
+                      asChild 
+                      isActive={pathname === item.href}
+                      className={cn(
+                        "rounded-xl transition-all duration-200 py-6",
+                        pathname === item.href ? "bg-accent/10 text-accent" : "hover:bg-white/5"
+                      )}
+                    >
+                      <Link href={item.href} className="flex items-center gap-3 w-full">
+                        <item.icon className={cn("w-5 h-5", pathname === item.href ? "text-accent" : "text-slate-400")} />
+                        <div className="flex flex-col flex-1">
+                          <span className="text-sm font-bold">{item.titleTh}</span>
+                          <span className="text-[10px] opacity-60 font-medium">{item.title}</span>
+                        </div>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
       <SidebarFooter className="p-4 bg-sidebar border-t border-white/5">
         <div className="flex items-center gap-3 px-3 py-4 bg-white/5 rounded-2xl">
@@ -137,7 +151,7 @@ export function AppSidebar() {
           </Avatar>
           <div className="flex flex-col flex-1 min-w-0">
             <span className="text-sm font-bold truncate text-white">{user?.displayName || "Guest User"}</span>
-            <span className="text-[10px] text-slate-400 truncate">{user?.email || "No Email"}</span>
+            <span className="text-[10px] text-slate-400 truncate">{isAdmin ? "Administrator" : (profile?.role || "Employee")}</span>
           </div>
           <button 
             onClick={handleLogout}
