@@ -2,14 +2,23 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Car, CheckCircle2, Clock, AlertTriangle } from "lucide-react";
-import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { CheckCircle2, Clock, AlertTriangle, Car as CarIcon } from "lucide-react";
+import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
 import { collection } from "firebase/firestore";
 
 export function StatsCards() {
   const db = useFirestore();
-  const vehiclesRef = useMemoFirebase(() => collection(db, "vehicles"), [db]);
-  const bookingsRef = useMemoFirebase(() => collection(db, "bookings"), [db]);
+  const { user } = useUser();
+
+  const vehiclesRef = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return collection(db, "vehicles");
+  }, [db, user]);
+
+  const bookingsRef = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return collection(db, "bookings");
+  }, [db, user]);
   
   const { data: vehicles } = useCollection(vehiclesRef);
   const { data: bookings } = useCollection(bookingsRef);
@@ -20,7 +29,7 @@ export function StatsCards() {
   const maintenance = vehicles?.filter(v => v.status === 'Maintenance').length || 0;
 
   const stats = [
-    { title: "Total Vehicles", titleTh: "ยานพาหนะทั้งหมด", value: totalVehicles, icon: Car, color: "text-blue-500" },
+    { title: "Total Vehicles", titleTh: "ยานพาหนะทั้งหมด", value: totalVehicles, icon: CarIcon, color: "text-blue-500" },
     { title: "Currently In Use", titleTh: "กำลังใช้งาน", value: inUse, icon: CheckCircle2, color: "text-green-500" },
     { title: "Pending Requests", titleTh: "รออนุมัติ", value: pending, icon: Clock, color: "text-yellow-500" },
     { title: "In Maintenance", titleTh: "กำลังซ่อมบำรุง", value: maintenance, icon: AlertTriangle, color: "text-red-500" },

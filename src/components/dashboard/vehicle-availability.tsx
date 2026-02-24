@@ -12,12 +12,18 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { Bus, Truck, CarFront } from "lucide-react";
-import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
 import { collection } from "firebase/firestore";
 
 export function VehicleAvailability() {
   const db = useFirestore();
-  const vehiclesRef = useMemoFirebase(() => collection(db, "vehicles"), [db]);
+  const { user } = useUser();
+
+  const vehiclesRef = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return collection(db, "vehicles");
+  }, [db, user]);
+
   const { data: vehicles } = useCollection(vehiclesRef);
 
   const getIcon = (type: string) => {

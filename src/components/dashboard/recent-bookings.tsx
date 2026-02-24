@@ -6,13 +6,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
-import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
 import { collection, query, limit, orderBy } from "firebase/firestore";
 
 export function RecentBookings() {
   const [mounted, setMounted] = useState(false);
   const db = useFirestore();
-  const bookingsQuery = useMemoFirebase(() => query(collection(db, "bookings"), orderBy("createdAt", "desc"), limit(5)), [db]);
+  const { user } = useUser();
+
+  const bookingsQuery = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return query(collection(db, "bookings"), orderBy("createdAt", "desc"), limit(5));
+  }, [db, user]);
+
   const { data: bookings } = useCollection(bookingsQuery);
 
   useEffect(() => {

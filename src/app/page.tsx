@@ -10,12 +10,18 @@ import { AnomalyDetectionWidget } from "@/components/admin/anomaly-detection-wid
 import { Button } from "@/components/ui/button";
 import { PlusCircle, FileSpreadsheet } from "lucide-react";
 import Link from "next/link";
-import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
 import { collection } from "firebase/firestore";
 
 export default function DashboardPage() {
   const db = useFirestore();
-  const bookingsRef = useMemoFirebase(() => collection(db, "bookings"), [db]);
+  const { user } = useUser();
+  
+  const bookingsRef = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return collection(db, "bookings");
+  }, [db, user]);
+  
   const { data: bookings } = useCollection(bookingsRef);
 
   const exportToExcel = () => {

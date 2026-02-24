@@ -19,7 +19,7 @@ import {
 import { Users, Car as CarIcon, Trash2, Plus, Info } from "lucide-react";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
-import { useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
+import { useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, useUser } from "@/firebase";
 import { collection, doc } from "firebase/firestore";
 
 export type VehicleType = 'Van' | 'Pickup' | 'Sedan';
@@ -28,7 +28,13 @@ export type VehicleStatus = 'Available' | 'Maintenance' | 'Booked' | 'In Use';
 export default function VehiclesPage() {
   const { toast } = useToast();
   const db = useFirestore();
-  const vehiclesRef = useMemoFirebase(() => collection(db, "vehicles"), [db]);
+  const { user } = useUser();
+
+  const vehiclesRef = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return collection(db, "vehicles");
+  }, [db, user]);
+
   const { data: vehicles, isLoading } = useCollection(vehiclesRef);
 
   const [isAdding, setIsAdding] = useState(false);
@@ -60,6 +66,8 @@ export default function VehiclesPage() {
       });
       return;
     }
+
+    if (!vehiclesRef) return;
 
     const vehicleData = {
       vehicleId: `V${Date.now()}`,
