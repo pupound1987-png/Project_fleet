@@ -7,6 +7,7 @@ import { format } from "date-fns";
 import { th } from "date-fns/locale";
 import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from "@/firebase";
 import { collection, query, limit, orderBy, where, doc } from "firebase/firestore";
+import { Loader2 } from "lucide-react";
 
 export function RecentBookings() {
   const [mounted, setMounted] = useState(false);
@@ -18,11 +19,13 @@ export function RecentBookings() {
     if (!db || !user) return null;
     return doc(db, "users", user.uid);
   }, [db, user]);
-  const { data: profile } = useDoc(profileRef);
+  
+  const { data: profile, isLoading: isProfileLoading } = useDoc(profileRef);
   const isAdmin = profile?.role === 'Admin';
 
   const bookingsQuery = useMemoFirebase(() => {
-    if (!db || !user) return null;
+    // Wait for profile loading to avoid permission errors
+    if (!db || !user || isProfileLoading) return null;
     
     const baseQuery = collection(db, "bookings");
     
@@ -32,9 +35,9 @@ export function RecentBookings() {
     } else {
       return query(baseQuery, where("employeeId", "==", user.uid), orderBy("createdAt", "desc"), limit(5));
     }
-  }, [db, user, isAdmin]);
+  }, [db, user, isAdmin, isProfileLoading]);
 
-  const { data: bookings } = useCollection(bookingsQuery);
+  const { data: bookings, isLoading: isBookingsLoading } = useCollection(bookingsQuery);
 
   useEffect(() => {
     setMounted(true);
@@ -69,7 +72,11 @@ export function RecentBookings() {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {bookings?.map((booking) => (
+          {(isProfileLoading || isBookingsLoading) ? (
+            <div className="flex justify-center py-4">
+              <Loader2 className="w-5 h-5 animate-spin text-primary" />
+            </div>
+          ) : bookings?.map((booking) => (
             <div key={booking.id} className="flex items-center justify-between p-3 rounded-lg border border-blue-50 bg-blue-50/20">
               <div className="space-y-1">
                 <p className="text-sm font-semibold text-blue-900">{booking.vehicleName}</p>
@@ -85,7 +92,7 @@ export function RecentBookings() {
               </div>
             </div>
           ))}
-          {(!bookings || bookings.length === 0) && (
+          {(!isBookingsLoading && !isProfileLoading && (!bookings || bookings.length === 0)) && (
             <div className="text-center py-4 text-xs text-muted-foreground italic">No recent activity. (ไม่มีกิจกรรมล่าสุด)</div>
           )}
         </div>

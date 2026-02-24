@@ -41,14 +41,16 @@ service cloud.firestore {
     }
 
     match /bookings/{bookingId} {
-      // Allow read (get/list) for all signed in users so they can see availability on calendar
-      allow read: if isSignedIn();
+      // Explicitly allow get and list for all signed in users
+      // This is required for the fleet calendar and availability checks
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
 
       // Only allow creation if the employeeId matches the authenticated user
       allow create: if isSignedIn() 
                     && request.resource.data.employeeId == request.auth.uid;
       
-      // Allow update for owners (if pending) or admins
+      // Allow update for owners (if pending/approved) or admins
       allow update: if isAdmin() || (isSignedIn() && resource.data.employeeId == request.auth.uid);
       
       // Only admins can delete bookings

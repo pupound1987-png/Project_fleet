@@ -15,7 +15,8 @@ export function StatsCards() {
     if (!db || !user) return null;
     return doc(db, "users", user.uid);
   }, [db, user]);
-  const { data: profile } = useDoc(profileRef);
+  
+  const { data: profile, isLoading: isProfileLoading } = useDoc(profileRef);
   const isAdmin = profile?.role === 'Admin';
 
   const vehiclesRef = useMemoFirebase(() => {
@@ -24,19 +25,21 @@ export function StatsCards() {
   }, [db, user]);
 
   const bookingsRef = useMemoFirebase(() => {
-    if (!db || !user) return null;
-    // Admins see all pending, Employees see only their pending
+    // Wait for user and profile to be ready to avoid permission errors
+    if (!db || !user || isProfileLoading) return null;
+    
+    // If Admin, see all. If Employee, only see own for stats context
     if (isAdmin) {
       return collection(db, "bookings");
     } else {
       return query(collection(db, "bookings"), where("employeeId", "==", user.uid));
     }
-  }, [db, user, isAdmin]);
+  }, [db, user, isAdmin, isProfileLoading]);
   
   const { data: vehicles, isLoading: isVehiclesLoading } = useCollection(vehiclesRef);
   const { data: bookings, isLoading: isBookingsLoading } = useCollection(bookingsRef);
 
-  if (isUserLoading || isVehiclesLoading || isBookingsLoading) {
+  if (isUserLoading || isVehiclesLoading || isBookingsLoading || isProfileLoading) {
     return (
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {[1, 2, 3, 4].map((i) => (
