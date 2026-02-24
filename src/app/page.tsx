@@ -1,3 +1,4 @@
+
 "use client";
 
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -7,49 +8,79 @@ import { RecentBookings } from "@/components/dashboard/recent-bookings";
 import { VehicleAvailability } from "@/components/dashboard/vehicle-availability";
 import { AnomalyDetectionWidget } from "@/components/admin/anomaly-detection-widget";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, FileSpreadsheet, LayoutDashboard } from "lucide-react";
+import { PlusCircle, FileSpreadsheet, LayoutDashboard, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
 import { collection } from "firebase/firestore";
+import { useToast } from "@/hooks/use-toast";
 
 export default function DashboardPage() {
   const db = useFirestore();
   const { user, isUserLoading } = useUser();
+  const { toast } = useToast();
   
   const bookingsRef = useMemoFirebase(() => {
     if (!db || !user) return null;
     return collection(db, "bookings");
   }, [db, user]);
   
-  const { data: bookings } = useCollection(bookingsRef);
+  const { data: bookings, isLoading: isBookingsLoading } = useCollection(bookingsRef);
 
   const exportToExcel = () => {
-    if (!bookings || bookings.length === 0) return;
+    if (!bookings || bookings.length === 0) {
+      toast({
+        title: "No Data | ไม่มีข้อมูล",
+        description: "There are no bookings to export. (ไม่พบรายการจองที่จะส่งออก)",
+      });
+      return;
+    }
 
-    const headers = ["Booking ID", "Vehicle", "Employee", "Department", "Destination", "Start", "End", "Status"];
-    const csvContent = [
-      headers.join(","),
-      ...bookings.map(b => [
-        b.bookingId,
-        b.vehicleName,
-        b.employeeName,
-        b.department,
-        b.destination,
-        b.startDateTime,
-        b.endDateTime,
-        b.status
-      ].join(","))
-    ].join("\n");
+    try {
+      const headers = ["Booking ID", "Vehicle", "Employee", "Department", "Destination", "Start", "End", "Status"];
+      
+      // Helper to wrap fields in quotes and escape internal quotes
+      const escapeCSV = (val: string) => {
+        const stringVal = val ? String(val) : "";
+        return `"${stringVal.replace(/"/g, '""')}"`;
+      };
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", `fleet_bookings_${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+      const rows = bookings.map(b => [
+        escapeCSV(b.bookingId),
+        escapeCSV(b.vehicleName),
+        escapeCSV(b.employeeName),
+        escapeCSV(b.department),
+        escapeCSV(b.destination),
+        escapeCSV(b.startDateTime),
+        escapeCSV(b.endDateTime),
+        escapeCSV(b.status)
+      ].join(","));
+
+      const csvContent = [headers.join(","), ...rows].join("\n");
+      
+      // Add UTF-8 BOM for Excel to recognize Thai characters
+      const BOM = "\uFEFF";
+      const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+      
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `fleet_bookings_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast({
+        title: "Export Success | ส่งออกสำเร็จ",
+        description: "Your report has been downloaded. (ดาวน์โหลดรายงานเรียบร้อยแล้ว)",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Export Failed | ส่งออกไม่สำเร็จ",
+        description: "An error occurred during export. (เกิดข้อผิดพลาดในการส่งออก)",
+      });
+    }
   };
 
   if (isUserLoading) return null;
@@ -67,8 +98,17 @@ export default function DashboardPage() {
             </div>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={exportToExcel} className="hidden sm:flex border-emerald-600 text-emerald-700 hover:bg-emerald-50 transition-colors">
-              <FileSpreadsheet className="mr-2 h-4 w-4" />
+            <Button 
+              variant="outline" 
+              onClick={exportToExcel} 
+              disabled={isBookingsLoading || !bookings || bookings.length === 0}
+              className="hidden sm:flex border-emerald-600 text-emerald-700 hover:bg-emerald-50 transition-colors disabled:opacity-50"
+            >
+              {isBookingsLoading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <FileSpreadsheet className="mr-2 h-4 w-4" />
+              )}
               Export | ส่งออก
             </Button>
             <Button asChild className="bg-primary hover:bg-primary/90 shadow-md transition-all active:scale-95">
