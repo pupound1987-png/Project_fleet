@@ -41,11 +41,8 @@ service cloud.firestore {
     }
 
     match /bookings/{bookingId} {
-      // Allow getting a single document if owner or admin
-      allow get: if isAdmin() || (isSignedIn() && resource.data.employeeId == request.auth.uid);
-      
-      // Enforce filtering by employeeId for non-admins during list operations
-      allow list: if isAdmin() || (isSignedIn() && resource.data.employeeId == request.auth.uid);
+      // Allow getting and listing all bookings for the calendar and fleet visibility
+      allow get, list: if isSignedIn();
 
       allow create: if isSignedIn() 
                     && request.resource.data.employeeId == request.auth.uid;
