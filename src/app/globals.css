@@ -4,34 +4,34 @@
 
 @layer base {
   :root {
-    --background: 210 100% 98%; /* #F0F8FF Light gray / Alice Blue */
+    --background: 210 40% 98%; /* Light Blue-Gray */
     --foreground: 222 47% 11%;
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
-    --primary: 197 71% 73%; /* #87CEEB Sky Blue */
-    --primary-foreground: 222 47% 11%;
+    --primary: 221 83% 53%; /* Royal Blue */
+    --primary-foreground: 210 40% 98%;
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222 47% 11%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 240 67% 94%; /* #E6E6FA Lavender */
-    --accent-foreground: 222 47% 11%;
+    --accent: 35 92% 50%; /* Safety Orange/Gold */
+    --accent-foreground: 210 40% 98%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 197 71% 73%;
-    --radius: 0.75rem;
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 222 47% 11%;
-    --sidebar-primary: 197 71% 73%;
-    --sidebar-primary-foreground: 222 47% 11%;
-    --sidebar-accent: 240 67% 94%;
-    --sidebar-accent-foreground: 222 47% 11%;
-    --sidebar-border: 214.3 31.8% 91.4%;
-    --sidebar-ring: 197 71% 73%;
+    --ring: 221 83% 53%;
+    --radius: 1rem;
+    --sidebar-background: 222 47% 11%; /* Deep Navy */
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 35 92% 50%;
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-accent: 217 33% 17%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217 33% 17%;
+    --sidebar-ring: 221 83% 53%;
   }
 }
 
@@ -43,6 +43,18 @@
     @apply bg-background text-foreground font-body;
   }
   h1, h2, h3, h4, h5, h6 {
-    @apply font-headline;
+    @apply font-headline font-bold;
   }
+}
+
+.hover-card-effect {
+  @apply transition-all duration-300 hover:shadow-xl hover:-translate-y-1;
+}
+
+.glass-morphism {
+  @apply bg-white/70 backdrop-blur-md border border-white/20;
+}
+
+.gradient-primary {
+  @apply bg-gradient-to-br from-blue-600 to-blue-800;
 }

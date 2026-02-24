@@ -1,10 +1,10 @@
-
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle2, Clock, AlertTriangle, Car as CarIcon } from "lucide-react";
 import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
 import { collection } from "firebase/firestore";
+import { cn } from "@/lib/utils";
 
 export function StatsCards() {
   const db = useFirestore();
@@ -29,25 +29,62 @@ export function StatsCards() {
   const maintenance = vehicles?.filter(v => v.status === 'Maintenance').length || 0;
 
   const stats = [
-    { title: "Total Vehicles", titleTh: "ยานพาหนะทั้งหมด", value: totalVehicles, icon: CarIcon, color: "text-blue-500" },
-    { title: "Currently In Use", titleTh: "กำลังใช้งาน", value: inUse, icon: CheckCircle2, color: "text-green-500" },
-    { title: "Pending Requests", titleTh: "รออนุมัติ", value: pending, icon: Clock, color: "text-yellow-500" },
-    { title: "In Maintenance", titleTh: "กำลังซ่อมบำรุง", value: maintenance, icon: AlertTriangle, color: "text-red-500" },
+    { 
+      title: "Total Vehicles", 
+      titleTh: "ยานพาหนะทั้งหมด", 
+      value: totalVehicles, 
+      icon: CarIcon, 
+      color: "text-blue-500",
+      bg: "bg-blue-500/10",
+      delay: "duration-300"
+    },
+    { 
+      title: "Currently In Use", 
+      titleTh: "กำลังใช้งาน", 
+      value: inUse, 
+      icon: CheckCircle2, 
+      color: "text-emerald-500",
+      bg: "bg-emerald-500/10",
+      delay: "duration-500"
+    },
+    { 
+      title: "Pending Requests", 
+      titleTh: "รออนุมัติ", 
+      value: pending, 
+      icon: Clock, 
+      color: "text-amber-500",
+      bg: "bg-amber-500/10",
+      delay: "duration-700"
+    },
+    { 
+      title: "In Maintenance", 
+      titleTh: "กำลังซ่อมบำรุง", 
+      value: maintenance, 
+      icon: AlertTriangle, 
+      color: "text-rose-500",
+      bg: "bg-rose-500/10",
+      delay: "duration-1000"
+    },
   ];
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
       {stats.map((stat) => (
-        <Card key={stat.title} className="shadow-sm border-none bg-white/50 backdrop-blur-sm">
+        <Card key={stat.title} className={cn(
+          "shadow-sm border-none bg-white hover-card-effect animate-in fade-in slide-in-from-bottom-4",
+          stat.delay
+        )}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <div className="flex flex-col">
-              <CardTitle className="text-xs text-muted-foreground uppercase">{stat.title}</CardTitle>
-              <span className="text-sm font-semibold text-blue-900">{stat.titleTh}</span>
+              <span className="text-sm font-bold text-slate-900">{stat.titleTh}</span>
+              <CardTitle className="text-[10px] text-slate-400 uppercase tracking-widest">{stat.title}</CardTitle>
             </div>
-            <stat.icon className={`h-5 w-5 ${stat.color}`} />
+            <div className={cn("p-2 rounded-xl", stat.bg)}>
+              <stat.icon className={cn("h-5 w-5", stat.color)} />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{stat.value}</div>
+            <div className="text-4xl font-black text-slate-900 tabular-nums">{stat.value}</div>
           </CardContent>
         </Card>
       ))}

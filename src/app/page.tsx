@@ -1,4 +1,3 @@
-
 "use client";
 
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -8,14 +7,14 @@ import { RecentBookings } from "@/components/dashboard/recent-bookings";
 import { VehicleAvailability } from "@/components/dashboard/vehicle-availability";
 import { AnomalyDetectionWidget } from "@/components/admin/anomaly-detection-widget";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, FileSpreadsheet } from "lucide-react";
+import { PlusCircle, FileSpreadsheet, LayoutDashboard } from "lucide-react";
 import Link from "next/link";
 import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
 import { collection } from "firebase/firestore";
 
 export default function DashboardPage() {
   const db = useFirestore();
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
   
   const bookingsRef = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -53,42 +52,47 @@ export default function DashboardPage() {
     document.body.removeChild(link);
   };
 
+  if (isUserLoading) return null;
+
   return (
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset className="bg-background">
-        <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between gap-2 border-b bg-white/80 backdrop-blur-md px-4 sm:px-6">
+        <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between gap-2 border-b glass-morphism px-4 sm:px-6">
           <div className="flex items-center gap-2">
             <SidebarTrigger />
-            <h2 className="text-lg font-semibold text-blue-900">Operational Dashboard | แผงการดำเนินงาน</h2>
+            <div className="flex items-center gap-2">
+              <LayoutDashboard className="w-5 h-5 text-primary" />
+              <h2 className="text-lg font-bold text-slate-800">Operational Dashboard | แผงควบคุม</h2>
+            </div>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={exportToExcel} className="hidden sm:flex border-green-600 text-green-700 hover:bg-green-50">
+            <Button variant="outline" onClick={exportToExcel} className="hidden sm:flex border-emerald-600 text-emerald-700 hover:bg-emerald-50 transition-colors">
               <FileSpreadsheet className="mr-2 h-4 w-4" />
-              Export Excel | ส่งออกไฟล์
+              Export | ส่งออก
             </Button>
-            <Button asChild className="bg-primary hover:bg-primary/90 shadow-md">
+            <Button asChild className="bg-primary hover:bg-primary/90 shadow-md transition-all active:scale-95">
               <Link href="/bookings">
                 <PlusCircle className="mr-2 h-4 w-4" />
-                New Booking | จองรถใหม่
+                จองรถใหม่
               </Link>
             </Button>
           </div>
         </header>
 
-        <main className="flex-1 space-y-6 p-4 sm:p-6 lg:p-8">
-          <div className="space-y-2">
-            <h1 className="text-3xl font-bold tracking-tight text-blue-950">Fleet Overview | ภาพรวมฟลีทรถ</h1>
-            <p className="text-muted-foreground">Monitor real-time vehicle status and upcoming reservations. (ติดตามสถานะรถแบบเรียลไทม์และการจองที่กำลังจะถึง)</p>
+        <main className="flex-1 space-y-8 p-4 sm:p-6 lg:p-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="space-y-1">
+            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Fleet Overview | ภาพรวมฟลีทรถ</h1>
+            <p className="text-slate-500">Monitor real-time vehicle status and upcoming reservations.</p>
           </div>
 
           <StatsCards />
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
-            <div className="lg:col-span-4">
+            <div className="lg:col-span-4 animate-in fade-in slide-in-from-left-4 duration-700">
               <VehicleAvailability />
             </div>
-            <div className="lg:col-span-3 space-y-6">
+            <div className="lg:col-span-3 space-y-6 animate-in fade-in slide-in-from-right-4 duration-700">
               <RecentBookings />
               <AnomalyDetectionWidget />
             </div>

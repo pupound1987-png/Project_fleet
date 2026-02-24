@@ -1,4 +1,3 @@
-
 "use client";
 
 import * as React from "react";
@@ -13,7 +12,8 @@ import {
   Settings,
   LogOut,
   PlusCircle,
-  BellRing
+  BellRing,
+  ChevronRight
 } from "lucide-react";
 
 import {
@@ -31,18 +31,19 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useUser, useAuth } from "@/firebase";
 import { signOut } from "firebase/auth";
+import { cn } from "@/lib/utils";
 
 const navItems = [
   { title: "Dashboard", titleTh: "แผงควบคุม", href: "/", icon: LayoutDashboard },
   { title: "Vehicles", titleTh: "ยานพาหนะ", href: "/vehicles", icon: Car },
   { title: "Bookings", titleTh: "จองรถ", href: "/bookings", icon: PlusCircle },
-  { title: "Calendar", titleTh: "ปฏิทินการใช้งาน", href: "/calendar", icon: CalendarIcon },
+  { title: "Calendar", titleTh: "ปฏิทิน", href: "/calendar", icon: CalendarIcon },
   { title: "My History", titleTh: "ประวัติของฉัน", href: "/history", icon: History },
 ];
 
 const adminItems = [
   { title: "Approvals", titleTh: "การอนุมัติ", href: "/admin/approvals", icon: ShieldCheck },
-  { title: "Fleet Management", titleTh: "จัดการฟลีทรถ", href: "/admin/fleet", icon: Settings },
+  { title: "Fleet Management", titleTh: "จัดการรถยนต์", href: "/admin/fleet", icon: Settings },
   { title: "Line Settings", titleTh: "ตั้งค่าแจ้งเตือน", href: "/admin/settings", icon: BellRing },
 ];
 
@@ -58,32 +59,40 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar className="border-r border-blue-100">
-      <SidebarHeader className="p-6">
+    <Sidebar className="border-none">
+      <SidebarHeader className="p-6 bg-sidebar">
         <div className="flex items-center gap-3">
-          <div className="bg-primary p-2 rounded-xl">
+          <div className="bg-accent p-2 rounded-2xl shadow-lg shadow-accent/20">
             <Car className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-xl font-bold font-headline tracking-tight text-blue-900">FleetLink</h1>
-            <p className="text-xs text-muted-foreground uppercase tracking-widest">Enterprise</p>
+            <h1 className="text-xl font-black font-headline tracking-tight text-white">FleetLink</h1>
+            <p className="text-[10px] text-accent font-bold uppercase tracking-[0.2em]">Enterprise</p>
           </div>
         </div>
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="bg-sidebar">
         <SidebarGroup>
-          <SidebarGroupLabel>Menu | เมนูหลัก</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-slate-400 px-4 mb-2 uppercase tracking-widest text-[10px] font-bold">Main Menu | เมนู</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="px-2 space-y-1">
               {navItems.map((item) => (
                 <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton asChild isActive={pathname === item.href}>
-                    <Link href={item.href} className="flex items-center gap-3">
-                      <item.icon className="w-4 h-4" />
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium">{item.titleTh}</span>
-                        <span className="text-[10px] text-muted-foreground leading-none">{item.title}</span>
+                  <SidebarMenuButton 
+                    asChild 
+                    isActive={pathname === item.href}
+                    className={cn(
+                      "rounded-xl transition-all duration-200 py-6",
+                      pathname === item.href ? "bg-accent/10 text-accent" : "hover:bg-white/5"
+                    )}
+                  >
+                    <Link href={item.href} className="flex items-center gap-3 w-full">
+                      <item.icon className={cn("w-5 h-5", pathname === item.href ? "text-accent" : "text-slate-400")} />
+                      <div className="flex flex-col flex-1">
+                        <span className="text-sm font-bold">{item.titleTh}</span>
+                        <span className="text-[10px] opacity-60 font-medium">{item.title}</span>
                       </div>
+                      {pathname === item.href && <ChevronRight className="w-4 h-4 text-accent" />}
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -92,18 +101,25 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarGroup>
-          <SidebarGroupLabel>Administration | ผู้ดูแลระบบ</SidebarGroupLabel>
+        <SidebarGroup className="mt-4">
+          <SidebarGroupLabel className="text-slate-400 px-4 mb-2 uppercase tracking-widest text-[10px] font-bold">Admin | ผู้ดูแล</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="px-2 space-y-1">
               {adminItems.map((item) => (
                 <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton asChild isActive={pathname === item.href}>
-                    <Link href={item.href} className="flex items-center gap-3">
-                      <item.icon className="w-4 h-4" />
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium">{item.titleTh}</span>
-                        <span className="text-[10px] text-muted-foreground leading-none">{item.title}</span>
+                  <SidebarMenuButton 
+                    asChild 
+                    isActive={pathname === item.href}
+                    className={cn(
+                      "rounded-xl transition-all duration-200 py-6",
+                      pathname === item.href ? "bg-accent/10 text-accent" : "hover:bg-white/5"
+                    )}
+                  >
+                    <Link href={item.href} className="flex items-center gap-3 w-full">
+                      <item.icon className={cn("w-5 h-5", pathname === item.href ? "text-accent" : "text-slate-400")} />
+                      <div className="flex flex-col flex-1">
+                        <span className="text-sm font-bold">{item.titleTh}</span>
+                        <span className="text-[10px] opacity-60 font-medium">{item.title}</span>
                       </div>
                     </Link>
                   </SidebarMenuButton>
@@ -113,21 +129,21 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter className="p-4 mt-auto border-t border-blue-50">
-        <div className="flex items-center gap-3 px-2 py-3 bg-accent/30 rounded-lg">
-          <Avatar className="h-9 w-9 border-2 border-white shadow-sm">
-            <AvatarImage src={`https://picsum.photos/seed/${user?.uid || 'guest'}/40/40`} />
-            <AvatarFallback>{user?.displayName?.substring(0, 2).toUpperCase() || "GU"}</AvatarFallback>
+      <SidebarFooter className="p-4 bg-sidebar border-t border-white/5">
+        <div className="flex items-center gap-3 px-3 py-4 bg-white/5 rounded-2xl">
+          <Avatar className="h-10 w-10 border-2 border-accent shadow-sm">
+            <AvatarImage src={`https://picsum.photos/seed/${user?.uid || 'guest'}/100/100`} />
+            <AvatarFallback className="bg-accent text-white font-bold">{user?.displayName?.substring(0, 2).toUpperCase() || "GU"}</AvatarFallback>
           </Avatar>
           <div className="flex flex-col flex-1 min-w-0">
-            <span className="text-sm font-semibold truncate text-blue-900">{user?.displayName || "Guest User"}</span>
-            <span className="text-xs text-muted-foreground truncate">{user?.email || "No Email"}</span>
+            <span className="text-sm font-bold truncate text-white">{user?.displayName || "Guest User"}</span>
+            <span className="text-[10px] text-slate-400 truncate">{user?.email || "No Email"}</span>
           </div>
           <button 
             onClick={handleLogout}
-            className="p-2 hover:bg-white rounded-md transition-colors text-muted-foreground hover:text-red-500"
+            className="p-2 hover:bg-red-500/20 rounded-xl transition-all text-slate-400 hover:text-red-400"
           >
-            <LogOut className="w-4 h-4" />
+            <LogOut className="w-5 h-5" />
           </button>
         </div>
       </SidebarFooter>
