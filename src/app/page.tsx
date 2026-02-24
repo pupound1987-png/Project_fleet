@@ -18,22 +18,17 @@ export default function DashboardPage() {
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
 
-  // Fetch user profile to determine role
   const profileRef = useMemoFirebase(() => {
     if (!db || !user) return null;
     return doc(db, "users", user.uid);
   }, [db, user]);
   
   const { data: profile, isLoading: isProfileLoading } = useDoc(profileRef);
-  
   const isAdmin = profile?.role === 'Admin';
   
   const bookingsRef = useMemoFirebase(() => {
-    // Wait for user and profile to be ready to avoid permission errors
     if (!db || !user || isProfileLoading) return null;
     
-    // If Admin, see all. If Employee, only see own for the main list
-    // The rules allow 'list' for all, but we filter for a better UX
     if (isAdmin) {
       return collection(db, "bookings");
     } else {
@@ -41,7 +36,14 @@ export default function DashboardPage() {
     }
   }, [db, user, isAdmin, isProfileLoading]);
   
-  const { data: bookings, isLoading: isBookingsLoading } = useCollection(bookingsRef);
+  const { data: rawBookings, isLoading: isBookingsLoading } = useCollection(bookingsRef);
+
+  // Client-side sorting for display and export
+  const bookings = rawBookings ? [...rawBookings].sort((a, b) => {
+    const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+    const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+    return dateB - dateA;
+  }) : null;
 
   const exportToExcel = () => {
     if (!bookings || bookings.length === 0) {
@@ -54,7 +56,6 @@ export default function DashboardPage() {
 
     try {
       const headers = ["Booking ID", "Vehicle", "Employee", "Department", "Destination", "Start", "End", "Status"];
-      
       const escapeCSV = (val: string) => {
         const stringVal = val ? String(val) : "";
         return `"${stringVal.replace(/"/g, '""')}"`;
@@ -72,10 +73,8 @@ export default function DashboardPage() {
       ].join(","));
 
       const csvContent = [headers.join(","), ...rows].join("\n");
-      
       const BOM = "\uFEFF";
       const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
-      
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.setAttribute("href", url);

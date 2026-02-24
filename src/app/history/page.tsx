@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -9,23 +8,30 @@ import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { History, MapPin, Clock, Loader2, Inbox } from "lucide-react";
 import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
-import { collection, query, where, orderBy } from "firebase/firestore";
+import { collection, query, where } from "firebase/firestore";
 
 export default function HistoryPage() {
   const [mounted, setMounted] = useState(false);
   const { user } = useUser();
   const db = useFirestore();
 
+  // Removed orderBy to avoid composite index requirement which causes permission errors
   const historyQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return query(
       collection(db, "bookings"),
-      where("employeeId", "==", user.uid),
-      orderBy("createdAt", "desc")
+      where("employeeId", "==", user.uid)
     );
   }, [db, user]);
 
-  const { data: bookings, isLoading } = useCollection(historyQuery);
+  const { data: rawBookings, isLoading } = useCollection(historyQuery);
+
+  // Sort bookings client-side to avoid index issues
+  const bookings = rawBookings ? [...rawBookings].sort((a, b) => {
+    const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+    const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+    return dateB - dateA;
+  }) : null;
 
   useEffect(() => {
     setMounted(true);

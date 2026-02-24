@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
 import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from "@/firebase";
-import { collection, query, limit, orderBy, where, doc } from "firebase/firestore";
+import { collection, query, where, doc } from "firebase/firestore";
 import { Loader2 } from "lucide-react";
 
 export function RecentBookings() {
@@ -14,7 +14,6 @@ export function RecentBookings() {
   const db = useFirestore();
   const { user } = useUser();
 
-  // Fetch user profile to determine role
   const profileRef = useMemoFirebase(() => {
     if (!db || !user) return null;
     return doc(db, "users", user.uid);
@@ -23,21 +22,26 @@ export function RecentBookings() {
   const { data: profile, isLoading: isProfileLoading } = useDoc(profileRef);
   const isAdmin = profile?.role === 'Admin';
 
+  // Use a simple query and sort client-side to avoid permission/index errors
   const bookingsQuery = useMemoFirebase(() => {
-    // Wait for profile loading to avoid permission errors
     if (!db || !user || isProfileLoading) return null;
     
     const baseQuery = collection(db, "bookings");
-    
-    // Admins see all, Employees see only their own
     if (isAdmin) {
-      return query(baseQuery, orderBy("createdAt", "desc"), limit(5));
+      return baseQuery;
     } else {
-      return query(baseQuery, where("employeeId", "==", user.uid), orderBy("createdAt", "desc"), limit(5));
+      return query(baseQuery, where("employeeId", "==", user.uid));
     }
   }, [db, user, isAdmin, isProfileLoading]);
 
-  const { data: bookings, isLoading: isBookingsLoading } = useCollection(bookingsQuery);
+  const { data: rawBookings, isLoading: isBookingsLoading } = useCollection(bookingsQuery);
+
+  // Sort and limit results on the client side
+  const bookings = rawBookings ? [...rawBookings].sort((a, b) => {
+    const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+    const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+    return dateB - dateA;
+  }).slice(0, 5) : null;
 
   useEffect(() => {
     setMounted(true);
