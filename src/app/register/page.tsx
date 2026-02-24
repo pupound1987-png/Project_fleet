@@ -15,7 +15,7 @@ import Image from "next/image";
 
 const AnimatedCarLogo = () => (
   <div className="relative flex flex-col items-center mb-6">
-    <div className="relative p-8 bg-accent rounded-3xl shadow-2xl shadow-accent/40 overflow-hidden w-32 h-24 flex items-center justify-center">
+    <div className="relative p-8 bg-accent rounded-3xl shadow-2xl shadow-accent/40 overflow-hidden w-32 h-24 flex items-center justify-center border-b-4 border-accent-foreground/20">
       {/* Road Lines moving Right to Left (Car moving Forward) */}
       <div className="absolute bottom-4 left-0 w-full flex justify-around overflow-hidden h-[3px]">
         <div className="w-6 h-full bg-white/50 animate-road-line"></div>
@@ -23,24 +23,28 @@ const AnimatedCarLogo = () => (
         <div className="w-6 h-full bg-white/50 animate-road-line [animation-delay:0.6s]"></div>
       </div>
       
-      {/* Car Body Facing Right */}
+      {/* Van Body Facing Right */}
       <div className="relative animate-drive-vibration z-10">
-        <svg viewBox="0 0 100 50" className="w-20 h-12 text-white fill-current drop-shadow-lg">
-          {/* Improved Car Shape - Facing Right */}
-          <path d="M5,35 L15,35 Q15,35 18,30 L25,15 Q30,5 50,5 L75,5 Q90,5 95,25 L98,35 Z" />
-          {/* Windshield & Windows */}
-          <path d="M55,8 L73,8 Q82,8 85,18 L83,22 L55,22 Z" fill="#1e293b" fillOpacity="0.4" />
-          <path d="M32,15 L50,10 L50,22 L28,22 Z" fill="#1e293b" fillOpacity="0.4" />
+        <svg viewBox="0 0 100 50" className="w-20 h-14 text-white fill-current drop-shadow-xl">
+          {/* Van Body Shape */}
+          <path d="M5,35 L90,35 L90,12 Q90,5 82,5 L15,5 Q5,5 5,12 Z" />
+          {/* Windshield */}
+          <path d="M72,8 L85,8 Q88,8 88,14 L88,20 L72,20 Z" fill="#1e293b" fillOpacity="0.5" />
+          {/* Side Windows */}
+          <path d="M12,8 L35,8 L35,20 L12,20 Z" fill="#1e293b" fillOpacity="0.5" />
+          <path d="M40,8 L68,8 L68,20 L40,20 Z" fill="#1e293b" fillOpacity="0.5" />
           {/* Headlight */}
-          <circle cx="94" cy="22" r="2" fill="#fef08a" className="animate-pulse" />
+          <rect x="85" y="24" width="4" height="4" rx="1" fill="#fef08a" className="animate-pulse" />
+          {/* Tail light */}
+          <rect x="6" y="24" width="3" height="6" rx="1" fill="#ef4444" />
         </svg>
 
         {/* Spinning Wheels */}
-        <div className="absolute -bottom-1 left-4 w-5 h-5 bg-slate-900 rounded-full border-2 border-white/40 animate-spin [animation-duration:0.4s]">
+        <div className="absolute -bottom-1 left-4 w-6 h-6 bg-slate-900 rounded-full border-2 border-white/40 animate-spin [animation-duration:0.3s] shadow-inner">
           <div className="w-full h-[2px] bg-white/60 absolute top-1/2 -translate-y-1/2"></div>
           <div className="w-[2px] h-full bg-white/60 absolute left-1/2 -translate-x-1/2"></div>
         </div>
-        <div className="absolute -bottom-1 right-4 w-5 h-5 bg-slate-900 rounded-full border-2 border-white/40 animate-spin [animation-duration:0.4s]">
+        <div className="absolute -bottom-1 right-4 w-6 h-6 bg-slate-900 rounded-full border-2 border-white/40 animate-spin [animation-duration:0.3s] shadow-inner">
           <div className="w-full h-[2px] bg-white/60 absolute top-1/2 -translate-y-1/2"></div>
           <div className="w-[2px] h-full bg-white/60 absolute left-1/2 -translate-x-1/2"></div>
         </div>
@@ -137,7 +141,7 @@ export default function RegisterPage() {
                   placeholder="Full Name | ชื่อ-นามสกุล" 
                   className="pl-12 py-6 bg-white/10 border-white/10 text-white placeholder:text-slate-500 rounded-xl focus:ring-accent"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(setName as any)}
                   required
                 />
               </div>
