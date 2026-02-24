@@ -1,6 +1,7 @@
 
 "use client";
 
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MOCK_BOOKINGS } from "@/lib/mock-data";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +9,12 @@ import { format } from "date-fns";
 import { th } from "date-fns/locale";
 
 export function RecentBookings() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Approved': return 'bg-green-100 text-green-700 hover:bg-green-100';
@@ -40,7 +47,7 @@ export function RecentBookings() {
               <div className="space-y-1">
                 <p className="text-sm font-semibold text-blue-900">{booking.vehicleName}</p>
                 <p className="text-xs text-muted-foreground">
-                  {booking.employeeName} • {format(new Date(booking.startDateTime), 'dd MMM, HH:mm', { locale: th })}
+                  {booking.employeeName} • {mounted ? format(new Date(booking.startDateTime), 'dd MMM, HH:mm', { locale: th }) : '...'}
                 </p>
               </div>
               <div className="flex flex-col items-end gap-1">

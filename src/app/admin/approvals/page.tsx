@@ -1,6 +1,7 @@
 
 "use client";
 
+import { useEffect, useState } from "react";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/sidebar";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -13,6 +14,11 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function AdminApprovalsPage() {
   const { toast } = useToast();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleAction = (id: string, action: 'approve' | 'reject') => {
     toast({
@@ -63,7 +69,9 @@ export default function AdminApprovalsPage() {
                       </div>
                       <div>
                         <p className="font-semibold text-blue-900">Time | เวลา</p>
-                        <p>{format(new Date(booking.startDateTime), 'dd MMM yyyy, HH:mm')} - {format(new Date(booking.endDateTime), 'HH:mm')}</p>
+                        <p>
+                          {mounted ? `${format(new Date(booking.startDateTime), 'dd MMM yyyy, HH:mm')} - ${format(new Date(booking.endDateTime), 'HH:mm')}` : '...'}
+                        </p>
                       </div>
                       <div className="md:col-span-2">
                         <p className="font-semibold text-blue-900">Purpose | วัตถุประสงค์</p>

@@ -1,6 +1,7 @@
 
 "use client";
 
+import { useEffect, useState } from "react";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +11,12 @@ import { format } from "date-fns";
 import { History, MapPin, Clock } from "lucide-react";
 
 export default function HistoryPage() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -43,7 +50,7 @@ export default function HistoryPage() {
                         <div className="flex items-center gap-2">
                           <Clock className="w-4 h-4 text-primary" />
                           <span>
-                            {format(new Date(booking.startDateTime), 'dd MMM yyyy, HH:mm')} - {format(new Date(booking.endDateTime), 'HH:mm')}
+                            {mounted ? `${format(new Date(booking.startDateTime), 'dd MMM yyyy, HH:mm')} - ${format(new Date(booking.endDateTime), 'HH:mm')}` : '...'}
                           </span>
                         </div>
                       </div>
@@ -59,7 +66,9 @@ export default function HistoryPage() {
                         {booking.status === 'Approved' ? 'อนุมัติแล้ว' : 
                          booking.status === 'Pending' ? 'รออนุมัติ' : booking.status}
                       </Badge>
-                      <span className="text-[10px] text-muted-foreground">Created: {format(new Date(booking.createdAt), 'dd MMM, HH:mm')}</span>
+                      <span className="text-[10px] text-muted-foreground">
+                        Created: {mounted ? format(new Date(booking.createdAt), 'dd MMM, HH:mm') : '...'}
+                      </span>
                     </div>
                   </div>
                 </CardContent>
