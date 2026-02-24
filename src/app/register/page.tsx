@@ -15,49 +15,55 @@ import Image from "next/image";
 
 const AnimatedCarLogo = () => (
   <div className="relative flex flex-col items-center mb-6">
-    <div className="relative p-8 bg-accent rounded-3xl shadow-2xl shadow-accent/40 overflow-hidden w-40 h-28 flex items-center justify-center border-b-4 border-accent-foreground/20">
-      {/* Road Lines moving towards viewer (Front View) */}
-      <div className="absolute inset-0 z-0 pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 w-[2px] h-10 bg-white/40 animate-road-line-incoming"></div>
-        <div className="absolute top-1/2 left-[35%] w-[2px] h-10 bg-white/40 animate-road-line-incoming [animation-delay:0.3s]"></div>
-        <div className="absolute top-1/2 left-[65%] w-[2px] h-10 bg-white/40 animate-road-line-incoming [animation-delay:0.6s]"></div>
+    <div className="relative p-4 bg-accent rounded-3xl shadow-2xl shadow-accent/40 overflow-hidden w-48 h-28 flex items-end justify-center border-b-4 border-accent-foreground/20">
+      {/* Moving Road Lines (From Right to Left for forward motion) */}
+      <div className="absolute bottom-6 left-0 w-full h-1 overflow-hidden pointer-events-none">
+        <div className="flex w-[200%] animate-[slide-left_1s_linear_infinite]">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="w-8 h-full bg-white/40 mr-8 rounded-full"></div>
+          ))}
+        </div>
       </div>
       
-      {/* Jeep Facing FRONT */}
-      <div className="relative animate-drive-vibration z-10 w-28">
-        <svg viewBox="0 0 100 80" className="w-28 h-24 text-white fill-current drop-shadow-2xl">
-          {/* Main Body */}
-          <path d="M10,65 L90,65 L90,35 L10,35 Z" />
-          {/* Windshield/Roof */}
-          <path d="M22,35 L78,35 L72,12 L28,12 Z" fillOpacity="0.75" />
-          {/* Internal Windshield Detail */}
-          <path d="M26,16 L74,16 L70,32 L30,32 Z" fill="#1e293b" fillOpacity="0.4" />
+      {/* Side Profile Jeep */}
+      <div className="relative animate-drive-vibration z-10 w-32 mb-4">
+        <svg viewBox="0 0 120 70" className="w-32 h-auto text-white fill-current drop-shadow-lg">
+          {/* Jeep Body Structure */}
+          <path d="M10,45 L110,45 L110,32 L85,32 L78,15 L25,15 L25,32 L10,32 Z" />
+          {/* Interior/Cabin shadow */}
+          <path d="M28,18 L75,18 L82,32 L28,32 Z" fill="#1e293b" fillOpacity="0.4" />
+          {/* Front Bumper */}
+          <rect x="105" y="40" width="8" height="6" rx="2" fill="#334155" />
+          {/* Spare Tire on the back */}
+          <circle cx="12" cy="30" r="10" fill="#0f172a" />
+          <circle cx="12" cy="30" r="6" fill="#1e293b" />
           
-          {/* Grille Area */}
-          <rect x="25" y="42" width="50" height="15" rx="2" fill="#1e293b" fillOpacity="0.6" />
-          {/* Grille Slots */}
-          <path d="M30,44 v11 M36,44 v11 M42,44 v11 M48,44 v11 M54,44 v11 M60,44 v11 M66,44 v11 M72,44 v11" 
-                stroke="white" strokeWidth="2" strokeOpacity="0.4" strokeLinecap="round" />
-          
-          {/* Headlights (Circular and Glowing) */}
-          <circle cx="18" cy="48" r="7" fill="#fef08a" className="animate-pulse" />
-          <circle cx="82" cy="48" r="7" fill="#fef08a" className="animate-pulse" />
-          <circle cx="18" cy="48" r="3" fill="white" />
-          <circle cx="82" cy="48" r="3" fill="white" />
-          
-          {/* Bumper */}
-          <rect x="5" y="62" width="90" height="6" rx="3" fill="#334155" />
-          
-          {/* Tires (Front View) */}
-          <rect x="8" y="65" width="16" height="12" rx="2" fill="#0f172a" />
-          <rect x="76" y="65" width="16" height="12" rx="2" fill="#0f172a" />
-          
-          {/* Side Mirrors */}
-          <path d="M10,38 L2,36 L2,42 Z" fillOpacity="0.8" />
-          <path d="M90,38 L98,36 L98,42 Z" fillOpacity="0.8" />
+          {/* Headlight (Side view) */}
+          <rect x="108" y="34" width="4" height="6" rx="1" fill="#fef08a" className="animate-pulse" />
         </svg>
+
+        {/* Separated Spinning Wheels */}
+        <div className="absolute -bottom-2 left-6 animate-spin duration-500">
+           <svg viewBox="0 0 20 20" className="w-6 h-6 text-[#0f172a]">
+             <circle cx="10" cy="10" r="9" fill="currentColor" />
+             <path d="M10,2 L10,18 M2,10 L18,10 M4,4 L16,16 M16,4 L4,16" stroke="white" strokeWidth="1.5" strokeOpacity="0.3" />
+           </svg>
+        </div>
+        <div className="absolute -bottom-2 right-4 animate-spin duration-500">
+           <svg viewBox="0 0 20 20" className="w-6 h-6 text-[#0f172a]">
+             <circle cx="10" cy="10" r="9" fill="currentColor" />
+             <path d="M10,2 L10,18 M2,10 L18,10 M4,4 L16,16 M16,4 L4,16" stroke="white" strokeWidth="1.5" strokeOpacity="0.3" />
+           </svg>
+        </div>
       </div>
     </div>
+    
+    <style jsx global>{`
+      @keyframes slide-left {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(-50%); }
+      }
+    `}</style>
   </div>
 );
 
@@ -149,7 +155,7 @@ export default function RegisterPage() {
                   placeholder="Full Name | ชื่อ-นามสกุล" 
                   className="pl-12 py-6 bg-white/10 border-white/10 text-white placeholder:text-slate-500 rounded-xl focus:ring-accent"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(e) => setName(name)}
                   required
                 />
               </div>
