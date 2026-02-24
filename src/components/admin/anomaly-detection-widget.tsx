@@ -6,20 +6,26 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Sparkles, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import { adminBookingAnomalyDetection, type AdminBookingAnomalyDetectionOutput } from "@/ai/flows/admin-booking-anomaly-detection";
-import { MOCK_BOOKINGS } from "@/lib/mock-data";
+import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { collection } from "firebase/firestore";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 export function AnomalyDetectionWidget() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AdminBookingAnomalyDetectionOutput | null>(null);
 
+  const db = useFirestore();
+  const bookingsRef = useMemoFirebase(() => collection(db, "bookings"), [db]);
+  const { data: bookings } = useCollection(bookingsRef);
+
   const runDetection = async () => {
+    if (!bookings || bookings.length === 0) return;
+    
     setLoading(true);
     setResult(null);
     try {
-      // Map mock data to detection input
       const res = await adminBookingAnomalyDetection({
-        bookings: MOCK_BOOKINGS.map(b => ({
+        bookings: bookings.map(b => ({
           bookingId: b.id,
           vehicleId: b.vehicleId,
           vehicleName: b.vehicleName,
@@ -53,6 +59,7 @@ export function AnomalyDetectionWidget() {
         {!result && !loading && (
           <Button 
             onClick={runDetection} 
+            disabled={!bookings || bookings.length === 0}
             className="w-full bg-primary text-blue-900 hover:bg-primary/80 font-semibold"
           >
             Analyze Activity | วิเคราะห์กิจกรรม
