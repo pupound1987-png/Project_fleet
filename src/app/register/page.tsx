@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { User, Mail, Lock, ArrowLeft } from "lucide-react";
+import { User, Mail, Lock, ArrowLeft, Info } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth, useFirestore } from "@/firebase";
@@ -15,9 +15,7 @@ import Image from "next/image";
 
 const AnimatedCarLogo = () => (
   <div className="relative flex flex-col items-center mb-6">
-    {/* Container with background to make car and wheels stand out */}
     <div className="relative p-4 bg-white/90 rounded-3xl shadow-xl overflow-hidden w-64 h-36 flex items-end justify-center border-b-4 border-primary/20">
-      {/* Moving Road Lines (Right to Left) */}
       <div className="absolute bottom-6 left-0 w-full h-1 overflow-hidden pointer-events-none">
         <div className="flex w-[200%] animate-[slide-left_0.6s_linear_infinite]">
           {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
@@ -26,21 +24,16 @@ const AnimatedCarLogo = () => (
         </div>
       </div>
       
-      {/* Small Red Sedan (Facing Right) */}
       <div className="relative animate-drive-vibration z-10 w-32 mb-4">
         <svg viewBox="0 0 120 60" className="w-32 h-auto drop-shadow-lg">
-          {/* Car Body */}
           <path 
             d="M10,45 L110,45 L110,35 C110,30 105,25 95,25 L85,25 L75,10 L35,10 L25,25 L15,25 C10,25 10,30 10,35 Z" 
             fill="#dc2626" 
           />
-          {/* Windows */}
           <path d="M38,14 L72,14 L80,25 L32,25 Z" fill="#1e293b" fillOpacity="0.7" />
-          {/* Headlight */}
           <circle cx="105" cy="35" r="3" fill="#fbbf24" className="animate-pulse" />
         </svg>
 
-        {/* Spinning Wheels - Dark color for contrast against white background */}
         <div className="absolute bottom-[-4px] left-6 animate-spin duration-300">
            <svg viewBox="0 0 24 24" className="w-7 h-7 text-[#0f172a]">
              <circle cx="12" cy="12" r="10" fill="currentColor" />
@@ -50,7 +43,7 @@ const AnimatedCarLogo = () => (
         <div className="absolute bottom-[-4px] right-6 animate-spin duration-300">
            <svg viewBox="0 0 24 24" className="w-7 h-7 text-[#0f172a]">
              <circle cx="12" cy="12" r="10" fill="currentColor" />
-             <path d="M12,4 L12,20 M4,12 L20,12" stroke="white" strokeWidth="2" strokeOpacity="0.3" />
+             <path d="M12,4 L12,20 M4,12 Record20,12" stroke="white" strokeWidth="2" strokeOpacity="0.3" />
            </svg>
         </div>
       </div>
@@ -90,6 +83,7 @@ export default function RegisterPage() {
 
       await updateProfile(user, { displayName: name });
 
+      // Special logic for Admin role during demo/testing
       const role = email.toLowerCase() === 'admin@tcitrendgroup' ? 'Admin' : 'Employee';
 
       await setDoc(doc(db, "users", user.uid), {
@@ -185,6 +179,13 @@ export default function RegisterPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                 />
+              </div>
+              
+              <div className="bg-blue-900/40 p-3 rounded-xl border border-blue-500/30 flex items-start gap-3">
+                <Info className="w-5 h-5 text-accent shrink-0 mt-0.5" />
+                <p className="text-[10px] text-slate-300 leading-relaxed">
+                  <span className="text-accent font-bold">Admin Tip:</span> Register with <span className="text-white underline font-mono">admin@tcitrendgroup</span> to get administrator privileges.
+                </p>
               </div>
               
               <Button 
