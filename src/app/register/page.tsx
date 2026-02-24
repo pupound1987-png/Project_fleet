@@ -2,16 +2,17 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { User, Mail, Lock } from "lucide-react";
+import { User, Mail, Lock, Car, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth, useFirestore } from "@/firebase";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
+import Image from "next/image";
 
 export default function RegisterPage() {
   const [name, setName] = useState("");
@@ -28,17 +29,13 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      // 1. Create User in Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // 2. Update Profile Display Name
       await updateProfile(user, { displayName: name });
 
-      // Check if this is the designated admin email
       const role = email.toLowerCase() === 'admin@tcitrendgroup' ? 'Admin' : 'Employee';
 
-      // 3. Create User Document in Firestore
       await setDoc(doc(db, "users", user.uid), {
         email: user.email,
         name: name,
@@ -47,7 +44,6 @@ export default function RegisterPage() {
         createdAt: new Date().toISOString()
       });
 
-      // 4. If Admin, also add to roles_admin collection as per backend.json structure
       if (role === 'Admin') {
         await setDoc(doc(db, "roles_admin", user.uid), {
           active: true,
@@ -73,65 +69,89 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
-      <h1 className="text-3xl font-bold text-[#1a2b3c] mb-8 tracking-tight">TCI TREND GROUP</h1>
-      
-      <Card className="w-full max-w-md shadow-2xl border-none rounded-[2rem] overflow-hidden">
-        <CardContent className="pt-12 pb-10 px-8">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-gray-800">สร้างบัญชีใหม่</h2>
+    <div className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden">
+      {/* Background Image with Overlay */}
+      <div className="absolute inset-0 z-0">
+        <Image
+          src="https://picsum.photos/seed/fleet4/1920/1080"
+          alt="Background"
+          fill
+          className="object-cover"
+          priority
+          data-ai-hint="car parking"
+        />
+        <div className="absolute inset-0 bg-slate-950/70 backdrop-blur-[2px]"></div>
+      </div>
+
+      <div className="relative z-10 w-full max-w-md animate-in fade-in zoom-in duration-500">
+        <div className="flex flex-col items-center mb-8">
+          <div className="bg-accent p-3 rounded-2xl shadow-xl shadow-accent/20 mb-4">
+            <Car className="w-10 h-10 text-white" />
           </div>
-          
-          <form onSubmit={handleRegister} className="space-y-4">
-            <div className="relative">
-              <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <Input 
-                placeholder="ชื่อ-นามสกุล" 
-                className="pl-12 py-6 bg-slate-50 border-none rounded-xl text-base"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
-            </div>
+          <h1 className="text-4xl font-black text-white tracking-tighter mb-1">FleetLink</h1>
+          <p className="text-accent font-bold uppercase tracking-[0.3em] text-xs">TCI TREND GROUP</p>
+        </div>
+
+        <Card className="glass-morphism border-white/10 shadow-2xl rounded-[2rem] overflow-hidden">
+          <CardHeader className="pt-10 text-center">
+            <CardTitle className="text-2xl font-bold text-white">Register | สร้างบัญชีใหม่</CardTitle>
+            <CardDescription className="text-slate-300">Join our vehicle management network today.</CardDescription>
+          </CardHeader>
+          <CardContent className="pb-10 px-8">
+            <form onSubmit={handleRegister} className="space-y-5">
+              <div className="relative">
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                <Input 
+                  placeholder="Full Name | ชื่อ-นามสกุล" 
+                  className="pl-12 py-6 bg-white/10 border-white/10 text-white placeholder:text-slate-500 rounded-xl focus:ring-accent"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
+              </div>
+              
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                <Input 
+                  type="email"
+                  placeholder="Email | อีเมลพนักงาน" 
+                  className="pl-12 py-6 bg-white/10 border-white/10 text-white placeholder:text-slate-500 rounded-xl focus:ring-accent"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                <Input 
+                  type="password"
+                  placeholder="Password | รหัสผ่าน" 
+                  className="pl-12 py-6 bg-white/10 border-white/10 text-white placeholder:text-slate-500 rounded-xl focus:ring-accent"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+              
+              <Button 
+                type="submit" 
+                className="w-full py-7 bg-accent hover:bg-accent/90 text-white text-lg font-bold rounded-xl mt-4 shadow-lg shadow-accent/20 transition-all active:scale-[0.98]"
+                disabled={loading}
+              >
+                {loading ? "Creating account..." : "Sign Up | สมัครสมาชิก"}
+              </Button>
+            </form>
             
-            <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <Input 
-                type="email"
-                placeholder="Email (Username)" 
-                className="pl-12 py-6 bg-slate-50 border-none rounded-xl text-base"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
+            <div className="text-center mt-8 text-sm text-slate-300">
+              Already have an account?{" "}
+              <Link href="/login" className="text-accent font-bold hover:underline underline-offset-4 flex items-center justify-center gap-1 mt-2">
+                <ArrowLeft className="w-4 h-4" /> Back to Login | กลับไปเข้าสู่ระบบ
+              </Link>
             </div>
-            
-            <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <Input 
-                type="password"
-                placeholder="Password" 
-                className="pl-12 py-6 bg-slate-50 border-none rounded-xl text-base"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-            
-            <Button 
-              type="submit" 
-              className="w-full py-7 bg-[#ff8c00] hover:bg-[#e67e00] text-white text-xl font-bold rounded-xl mt-6 shadow-lg transition-all"
-              disabled={loading}
-            >
-              {loading ? "กำลังลงทะเบียน..." : "สมัครสมาชิก"}
-            </Button>
-          </form>
-          
-          <div className="text-center mt-6 text-sm text-gray-500">
-            มีบัญชีอยู่แล้ว? <Link href="/login" className="text-[#ff8c00] font-bold hover:underline">เข้าสู่ระบบ</Link>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
