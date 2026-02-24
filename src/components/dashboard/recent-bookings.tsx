@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MOCK_BOOKINGS } from "@/lib/mock-data";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import { th } from "date-fns/locale";
 
 export function RecentBookings() {
   const getStatusColor = (status: string) => {
@@ -16,10 +17,21 @@ export function RecentBookings() {
     }
   };
 
+  const getStatusTh = (status: string) => {
+    switch (status) {
+      case 'Approved': return 'อนุมัติแล้ว';
+      case 'Pending': return 'รออนุมัติ';
+      case 'Rejected': return 'ปฏิเสธ';
+      case 'Cancelled': return 'ยกเลิก';
+      case 'Completed': return 'เสร็จสิ้น';
+      default: return status;
+    }
+  }
+
   return (
     <Card className="shadow-sm border-none bg-white">
       <CardHeader>
-        <CardTitle className="text-lg font-bold text-blue-900">Recent Bookings</CardTitle>
+        <CardTitle className="text-lg font-bold text-blue-900">Recent Bookings | การจองล่าสุด</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -28,12 +40,15 @@ export function RecentBookings() {
               <div className="space-y-1">
                 <p className="text-sm font-semibold text-blue-900">{booking.vehicleName}</p>
                 <p className="text-xs text-muted-foreground">
-                  {booking.employeeName} • {format(new Date(booking.startDateTime), 'MMM dd, HH:mm')}
+                  {booking.employeeName} • {format(new Date(booking.startDateTime), 'dd MMM, HH:mm', { locale: th })}
                 </p>
               </div>
-              <Badge className={`font-medium ${getStatusColor(booking.status)}`}>
-                {booking.status}
-              </Badge>
+              <div className="flex flex-col items-end gap-1">
+                <Badge className={`font-medium ${getStatusColor(booking.status)}`}>
+                  {booking.status}
+                </Badge>
+                <span className="text-[10px] text-muted-foreground">{getStatusTh(booking.status)}</span>
+              </div>
             </div>
           ))}
         </div>

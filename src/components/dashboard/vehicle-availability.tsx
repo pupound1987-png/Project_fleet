@@ -25,9 +25,9 @@ export function VehicleAvailability() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'Available': return <Badge className="bg-green-500 hover:bg-green-600">Available</Badge>;
-      case 'In Use': return <Badge className="bg-blue-500 hover:bg-blue-600">In Use</Badge>;
-      case 'Maintenance': return <Badge className="bg-red-500 hover:bg-red-600">Maintenance</Badge>;
+      case 'Available': return <Badge className="bg-green-500 hover:bg-green-600">Available | ว่าง</Badge>;
+      case 'In Use': return <Badge className="bg-blue-500 hover:bg-blue-600">In Use | กำลังใช้</Badge>;
+      case 'Maintenance': return <Badge className="bg-red-500 hover:bg-red-600">Maintenance | ซ่อมบำรุง</Badge>;
       default: return <Badge variant="secondary">{status}</Badge>;
     }
   };
@@ -35,17 +35,17 @@ export function VehicleAvailability() {
   return (
     <Card className="shadow-sm border-none bg-white">
       <CardHeader>
-        <CardTitle className="text-lg font-bold text-blue-900">Fleet Availability</CardTitle>
+        <CardTitle className="text-lg font-bold text-blue-900">Fleet Availability | สถานะรถในฟลีท</CardTitle>
       </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
             <TableRow className="bg-accent/30 hover:bg-accent/30 border-none">
-              <TableHead className="rounded-l-lg">Vehicle</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>License Plate</TableHead>
-              <TableHead>Capacity</TableHead>
-              <TableHead className="text-right rounded-r-lg">Status</TableHead>
+              <TableHead className="rounded-l-lg">Vehicle | รถ</TableHead>
+              <TableHead>Type | ประเภท</TableHead>
+              <TableHead>License Plate | ทะเบียน</TableHead>
+              <TableHead>Capacity | ความจุ</TableHead>
+              <TableHead className="text-right rounded-r-lg">Status | สถานะ</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -59,7 +59,7 @@ export function VehicleAvailability() {
                   </div>
                 </TableCell>
                 <TableCell className="font-mono text-xs">{vehicle.licensePlate}</TableCell>
-                <TableCell>{vehicle.capacity} Seats</TableCell>
+                <TableCell>{vehicle.capacity} Seats | ที่นั่ง</TableCell>
                 <TableCell className="text-right">
                   {getStatusBadge(vehicle.status)}
                 </TableCell>

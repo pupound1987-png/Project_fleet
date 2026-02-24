@@ -45,9 +45,9 @@ export function AnomalyDetectionWidget() {
       <CardHeader>
         <div className="flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-primary" />
-          <CardTitle className="text-lg font-bold">Smart Insights</CardTitle>
+          <CardTitle className="text-lg font-bold">Smart Insights | ข้อมูลอัจฉริยะ</CardTitle>
         </div>
-        <CardDescription>AI-powered anomaly detection for booking patterns.</CardDescription>
+        <CardDescription>AI-powered anomaly detection for booking patterns. (ระบบตรวจจับความผิดปกติในการจองด้วย AI)</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {!result && !loading && (
@@ -55,14 +55,14 @@ export function AnomalyDetectionWidget() {
             onClick={runDetection} 
             className="w-full bg-primary text-blue-900 hover:bg-primary/80 font-semibold"
           >
-            Analyze Recent Activity
+            Analyze Activity | วิเคราะห์กิจกรรม
           </Button>
         )}
 
         {loading && (
           <div className="flex flex-col items-center justify-center py-6 space-y-3">
             <Loader2 className="w-8 h-8 text-primary animate-spin" />
-            <p className="text-sm text-muted-foreground animate-pulse">Scanning bookings for irregularities...</p>
+            <p className="text-sm text-muted-foreground animate-pulse">Scanning bookings for irregularities... (กำลังสแกนหาความผิดปกติ...)</p>
           </div>
         )}
 
@@ -71,7 +71,7 @@ export function AnomalyDetectionWidget() {
             {result.isAnomaly ? (
               <Alert variant="destructive" className="bg-red-50 border-red-200">
                 <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Anomaly Detected: {result.anomalyType}</AlertTitle>
+                <AlertTitle>Anomaly Detected: {result.anomalyType} | ตรวจพบความผิดปกติ</AlertTitle>
                 <AlertDescription className="text-xs mt-1">
                   {result.description}
                 </AlertDescription>
@@ -79,7 +79,7 @@ export function AnomalyDetectionWidget() {
             ) : (
               <Alert className="bg-green-50 border-green-200 text-green-800">
                 <CheckCircle2 className="h-4 w-4 text-green-600" />
-                <AlertTitle>All Clear</AlertTitle>
+                <AlertTitle>All Clear | ปกติดี</AlertTitle>
                 <AlertDescription className="text-xs">
                   {result.description}
                 </AlertDescription>
@@ -88,7 +88,7 @@ export function AnomalyDetectionWidget() {
 
             {result.suggestedAction && (
               <div className="p-3 bg-white rounded-lg border border-blue-100 text-xs">
-                <p className="font-bold text-blue-900 mb-1">Suggested Action:</p>
+                <p className="font-bold text-blue-900 mb-1">Suggested Action | ข้อเสนอแนะ:</p>
                 <p className="text-muted-foreground">{result.suggestedAction}</p>
               </div>
             )}
@@ -99,7 +99,7 @@ export function AnomalyDetectionWidget() {
               onClick={() => setResult(null)} 
               className="w-full text-xs"
             >
-              Clear Results
+              Clear Results | ล้างผลลัพธ์
             </Button>
           </div>
         )}

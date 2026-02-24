@@ -34,8 +34,8 @@ export default function BookingsPage() {
     setTimeout(() => {
       setLoading(false);
       toast({
-        title: "Booking Requested",
-        description: "Your vehicle request has been sent to admin for approval.",
+        title: "Booking Requested | ส่งคำขอจองแล้ว",
+        description: "Your vehicle request has been sent to admin for approval. (คำขอของคุณถูกส่งไปยังผู้ดูแลระบบเพื่อรอการอนุมัติ)",
       });
       router.push("/");
     }, 1500);
@@ -47,25 +47,25 @@ export default function BookingsPage() {
       <SidebarInset className="bg-background">
         <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-white/80 backdrop-blur-md px-4 sm:px-6">
           <SidebarTrigger />
-          <h2 className="text-lg font-semibold text-blue-900">New Reservation</h2>
+          <h2 className="text-lg font-semibold text-blue-900">New Reservation | การจองใหม่</h2>
         </header>
 
         <main className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
           <Card className="shadow-lg border-none">
             <CardHeader className="bg-primary/10 rounded-t-lg pb-6">
-              <CardTitle className="text-2xl font-bold text-blue-900">Vehicle Request Form</CardTitle>
-              <CardDescription>Please provide accurate details for your journey.</CardDescription>
+              <CardTitle className="text-2xl font-bold text-blue-900">Vehicle Request Form | แบบฟอร์มขอใช้รถ</CardTitle>
+              <CardDescription>Please provide accurate details for your journey. (กรุณากรอกข้อมูลการเดินทางให้ครบถ้วน)</CardDescription>
             </CardHeader>
             <CardContent className="pt-8">
               <form onSubmit={handleSubmit} className="grid gap-6">
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label className="text-sm font-semibold flex items-center gap-2">
-                      <CalendarIcon className="w-3 h-3" /> Select Vehicle
+                      <CalendarIcon className="w-3 h-3" /> Select Vehicle | เลือกยานพาหนะ
                     </Label>
                     <Select required>
                       <SelectTrigger className="bg-white">
-                        <SelectValue placeholder="Choose an available car" />
+                        <SelectValue placeholder="Choose an available car | เลือกรถที่ว่าง" />
                       </SelectTrigger>
                       <SelectContent>
                         {MOCK_VEHICLES.filter(v => v.status === 'Available').map(v => (
@@ -78,7 +78,7 @@ export default function BookingsPage() {
                   </div>
                   <div className="space-y-2">
                     <Label className="text-sm font-semibold flex items-center gap-2">
-                      <Phone className="w-3 h-3" /> Contact Phone
+                      <Phone className="w-3 h-3" /> Contact Phone | เบอร์โทรศัพท์ติดต่อ
                     </Label>
                     <Input placeholder="08x-xxx-xxxx" required className="bg-white" />
                   </div>
@@ -87,13 +87,13 @@ export default function BookingsPage() {
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label className="text-sm font-semibold flex items-center gap-2">
-                      <Clock className="w-3 h-3" /> Start Date & Time
+                      <Clock className="w-3 h-3" /> Start Date & Time | วันที่และเวลาเริ่มต้น
                     </Label>
                     <Input type="datetime-local" required className="bg-white" />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-sm font-semibold flex items-center gap-2">
-                      <Clock className="w-3 h-3" /> End Date & Time
+                      <Clock className="w-3 h-3" /> End Date & Time | วันที่และเวลาสิ้นสุด
                     </Label>
                     <Input type="datetime-local" required className="bg-white" />
                   </div>
@@ -101,22 +101,22 @@ export default function BookingsPage() {
 
                 <div className="space-y-2">
                   <Label className="text-sm font-semibold flex items-center gap-2">
-                    <MapPin className="w-3 h-3" /> Destination
+                    <MapPin className="w-3 h-3" /> Destination | สถานที่จุดหมาย
                   </Label>
-                  <Input placeholder="Where are you going?" required className="bg-white" />
+                  <Input placeholder="Where are you going? | คุณกำลังจะไปที่ไหน?" required className="bg-white" />
                 </div>
 
                 <div className="space-y-2">
                   <Label className="text-sm font-semibold flex items-center gap-2">
-                    <ClipboardList className="w-3 h-3" /> Purpose of Trip
+                    <ClipboardList className="w-3 h-3" /> Purpose of Trip | วัตถุประสงค์การเดินทาง
                   </Label>
-                  <Textarea placeholder="Describe the reason for this booking" required className="bg-white min-h-[100px]" />
+                  <Textarea placeholder="Describe the reason for this booking | ระบุเหตุผลในการจองรถ" required className="bg-white min-h-[100px]" />
                 </div>
 
                 <div className="flex justify-end gap-3 pt-4">
-                  <Button variant="outline" type="button" onClick={() => router.back()}>Cancel</Button>
+                  <Button variant="outline" type="button" onClick={() => router.back()}>Cancel | ยกเลิก</Button>
                   <Button type="submit" className="bg-primary hover:bg-primary/90 text-blue-900 px-8" disabled={loading}>
-                    {loading ? "Processing..." : "Submit Booking"}
+                    {loading ? "Processing... | กำลังดำเนินการ..." : "Submit Booking | ยืนยันจองรถ"}
                   </Button>
                 </div>
               </form>

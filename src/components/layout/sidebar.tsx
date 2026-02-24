@@ -30,16 +30,16 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const navItems = [
-  { title: "Dashboard", href: "/", icon: LayoutDashboard },
-  { title: "Vehicles", href: "/vehicles", icon: Car },
-  { title: "Bookings", href: "/bookings", icon: PlusCircle },
-  { title: "Calendar", href: "/calendar", icon: CalendarIcon },
-  { title: "My History", href: "/history", icon: History },
+  { title: "Dashboard", titleTh: "แผงควบคุม", href: "/", icon: LayoutDashboard },
+  { title: "Vehicles", titleTh: "ยานพาหนะ", href: "/vehicles", icon: Car },
+  { title: "Bookings", titleTh: "จองรถ", href: "/bookings", icon: PlusCircle },
+  { title: "Calendar", titleTh: "ปฏิทินการใช้งาน", href: "/calendar", icon: CalendarIcon },
+  { title: "My History", titleTh: "ประวัติของฉัน", href: "/history", icon: History },
 ];
 
 const adminItems = [
-  { title: "Approvals", href: "/admin/approvals", icon: ShieldCheck },
-  { title: "Fleet Management", href: "/admin/fleet", icon: Settings },
+  { title: "Approvals", titleTh: "การอนุมัติ", href: "/admin/approvals", icon: ShieldCheck },
+  { title: "Fleet Management", titleTh: "จัดการฟลีทรถ", href: "/admin/fleet", icon: Settings },
 ];
 
 export function AppSidebar() {
@@ -60,7 +60,7 @@ export function AppSidebar() {
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Menu</SidebarGroupLabel>
+          <SidebarGroupLabel>Menu | เมนูหลัก</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {navItems.map((item) => (
@@ -68,7 +68,10 @@ export function AppSidebar() {
                   <SidebarMenuButton asChild isActive={pathname === item.href}>
                     <Link href={item.href} className="flex items-center gap-3">
                       <item.icon className="w-4 h-4" />
-                      <span>{item.title}</span>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium">{item.titleTh}</span>
+                        <span className="text-[10px] text-muted-foreground leading-none">{item.title}</span>
+                      </div>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -78,7 +81,7 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>Administration</SidebarGroupLabel>
+          <SidebarGroupLabel>Administration | ผู้ดูแลระบบ</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {adminItems.map((item) => (
@@ -86,7 +89,10 @@ export function AppSidebar() {
                   <SidebarMenuButton asChild isActive={pathname === item.href}>
                     <Link href={item.href} className="flex items-center gap-3">
                       <item.icon className="w-4 h-4" />
-                      <span>{item.title}</span>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium">{item.titleTh}</span>
+                        <span className="text-[10px] text-muted-foreground leading-none">{item.title}</span>
+                      </div>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

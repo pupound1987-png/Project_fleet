@@ -12,10 +12,10 @@ export function StatsCards() {
   const maintenance = MOCK_VEHICLES.filter(v => v.status === 'Maintenance').length;
 
   const stats = [
-    { title: "Total Vehicles", value: totalVehicles, icon: Car, color: "text-blue-500" },
-    { title: "Currently In Use", value: inUse, icon: CheckCircle2, color: "text-green-500" },
-    { title: "Pending Requests", value: pending, icon: Clock, color: "text-yellow-500" },
-    { title: "In Maintenance", value: maintenance, icon: AlertTriangle, color: "text-red-500" },
+    { title: "Total Vehicles", titleTh: "ยานพาหนะทั้งหมด", value: totalVehicles, icon: Car, color: "text-blue-500" },
+    { title: "Currently In Use", titleTh: "กำลังใช้งาน", value: inUse, icon: CheckCircle2, color: "text-green-500" },
+    { title: "Pending Requests", titleTh: "รออนุมัติ", value: pending, icon: Clock, color: "text-yellow-500" },
+    { title: "In Maintenance", titleTh: "กำลังซ่อมบำรุง", value: maintenance, icon: AlertTriangle, color: "text-red-500" },
   ];
 
   return (
@@ -23,11 +23,14 @@ export function StatsCards() {
       {stats.map((stat) => (
         <Card key={stat.title} className="shadow-sm border-none bg-white/50 backdrop-blur-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-            <stat.icon className={`h-4 w-4 ${stat.color}`} />
+            <div className="flex flex-col">
+              <CardTitle className="text-xs text-muted-foreground uppercase">{stat.title}</CardTitle>
+              <span className="text-sm font-semibold text-blue-900">{stat.titleTh}</span>
+            </div>
+            <stat.icon className={`h-5 w-5 ${stat.color}`} />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stat.value}</div>
+            <div className="text-3xl font-bold">{stat.value}</div>
           </CardContent>
         </Card>
       ))}
