@@ -1,0 +1,233 @@
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents an employee or administrator within the company vehicle booking system. Login is managed via company email.",
+      "properties": {
+        "email": {
+          "type": "string",
+          "description": "Unique identifier for the User entity, which is the user's company email.",
+          "format": "email"
+        },
+        "name": {
+          "type": "string",
+          "description": "The full name of the user."
+        },
+        "department": {
+          "type": "string",
+          "description": "The department the user belongs to."
+        },
+        "role": {
+          "type": "string",
+          "description": "The role of the user within the system (e.g., Employee, Admin)."
+        }
+      },
+      "required": [
+        "email",
+        "name",
+        "department",
+        "role"
+      ]
+    },
+    "Vehicle": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Vehicle",
+      "type": "object",
+      "description": "Represents a company vehicle available for booking.",
+      "properties": {
+        "vehicleId": {
+          "type": "string",
+          "description": "Unique identifier for the Vehicle entity."
+        },
+        "vehicleName": {
+          "type": "string",
+          "description": "The descriptive name of the vehicle."
+        },
+        "licensePlate": {
+          "type": "string",
+          "description": "The license plate number of the vehicle."
+        },
+        "type": {
+          "type": "string",
+          "description": "The type of vehicle (e.g., Van, Pickup, Sedan)."
+        },
+        "capacity": {
+          "type": "number",
+          "description": "The passenger capacity of the vehicle."
+        },
+        "status": {
+          "type": "string",
+          "description": "The current operational status of the vehicle (e.g., Available, Maintenance). This represents the vehicle's general state, not booking-specific availability."
+        },
+        "remark": {
+          "type": "string",
+          "description": "Any additional remarks or notes about the vehicle."
+        }
+      },
+      "required": [
+        "vehicleId",
+        "vehicleName",
+        "licensePlate",
+        "type",
+        "capacity",
+        "status"
+      ]
+    },
+    "Booking": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Booking",
+      "type": "object",
+      "description": "Represents a reservation made by an employee for a company vehicle.",
+      "properties": {
+        "bookingId": {
+          "type": "string",
+          "description": "Unique identifier for the Booking entity."
+        },
+        "vehicleId": {
+          "type": "string",
+          "description": "Reference to Vehicle. (Relationship: Vehicle 1:N Booking)"
+        },
+        "vehicleName": {
+          "type": "string",
+          "description": "The name of the vehicle booked. This is a denormalized field, typically derived from the referenced Vehicle entity."
+        },
+        "employeeEmail": {
+          "type": "string",
+          "description": "Reference to User. The email of the employee who made the booking. (Relationship: User 1:N Booking)",
+          "format": "email"
+        },
+        "employeeName": {
+          "type": "string",
+          "description": "The name of the employee who made the booking. This is a denormalized field, typically derived from the referenced User entity."
+        },
+        "department": {
+          "type": "string",
+          "description": "The department of the employee who made the booking. This is a denormalized field, typically derived from the referenced User entity."
+        },
+        "phone": {
+          "type": "string",
+          "description": "The contact phone number of the employee for this booking."
+        },
+        "destination": {
+          "type": "string",
+          "description": "The intended destination for the trip."
+        },
+        "startDateTime": {
+          "type": "string",
+          "description": "The planned start date and time for the booking.",
+          "format": "date-time"
+        },
+        "endDateTime": {
+          "type": "string",
+          "description": "The planned end date and time for the booking.",
+          "format": "date-time"
+        },
+        "purpose": {
+          "type": "string",
+          "description": "The purpose or reason for the vehicle booking."
+        },
+        "status": {
+          "type": "string",
+          "description": "The current status of the booking (e.g., Pending, Approved, Rejected, Cancelled, Completed)."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The timestamp when the booking record was created.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "bookingId",
+        "vehicleId",
+        "vehicleName",
+        "employeeEmail",
+        "employeeName",
+        "department",
+        "phone",
+        "destination",
+        "startDateTime",
+        "endDateTime",
+        "purpose",
+        "status",
+        "createdAt"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores individual user profiles. The 'userId' is the Firebase Authentication UID. Includes 'email', 'name', 'department'. The 'role' field is for reference, but administrative authorization is primarily managed via the '/roles_admin/{adminId}' collection for robust DBAC. Security rules: Read/write by owner (userId) or Admin; Admin can read all.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The Firebase Authentication User ID (UID) of the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/roles_admin/{adminId}",
+        "definition": {
+          "entityName": "Role",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "A dedicated collection for managing administrative roles. The 'adminId' is the Firebase Authentication UID of an administrator. The existence of a document at this path signifies an administrative role. This ensures authorization independence for admin checks (using `exists()` in rules) and clearly segregates role-based access. Security rules: Read/write by Admin only. Minimal document content (e.g., { active: true }) is expected.",
+          "params": [
+            {
+              "name": "adminId",
+              "description": "The Firebase Authentication User ID (UID) of an administrator."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/vehicles/{vehicleId}",
+        "definition": {
+          "entityName": "Vehicle",
+          "schema": {
+            "$ref": "#/backend/entities/Vehicle"
+          },
+          "description": "Stores information about each company vehicle. Includes 'vehicleName', 'licensePlate', 'type', 'capacity', 'status', 'remark'. All documents in this collection share the same security posture. Security rules: Read by all authenticated users (employees); CRUD operations are restricted to Admins.",
+          "params": [
+            {
+              "name": "vehicleId",
+              "description": "The unique identifier for the vehicle."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/bookings/{bookingId}",
+        "definition": {
+          "entityName": "Booking",
+          "schema": {
+            "$ref": "#/backend/entities/Booking"
+          },
+          "description": "Contains details for each vehicle booking. Crucially, this document includes denormalized authorization fields: 'employeeId' (Firebase UID of the booking user), 'employeeName', 'employeeEmail', 'department', and 'vehicleName'. This denormalization enables Authorization Independence, allowing security rules to validate ownership and context without cross-document `get()` calls. Security rules: Create by any authenticated user (matching `employeeId` to `request.auth.uid`); Read by owner (`employeeId`) or Admin; Update (e.g., status changes, cancellation) by owner (under specific conditions, e.g., 'Pending') or Admin; Delete by Admin only.",
+          "params": [
+            {
+              "name": "bookingId",
+              "description": "The unique identifier for the booking."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The recommended Firestore structure for the 'FleetLink' Company Vehicle Booking System prioritizes Authorization Independence, Structural Segregation, and consistent Access Modeling. To ensure Authorization Independence, key user and vehicle information is denormalized directly into the 'Booking' documents. Specifically, the 'Booking' document will include 'employeeId' (the Firebase UID of the booking employee), 'employeeName', 'employeeEmail', 'department', and 'vehicleName'. This eliminates the need for expensive and rule-breaking `get()` operations in security rules when authorizing access to bookings, allowing for atomic writes and simplified debugging. User profiles are stored in '/users/{userId}' where 'userId' is the Firebase Authentication UID, which standardizes ownership checks. Administrative roles are managed via a dedicated '/roles_admin/{adminId}' collection. This approach, using document existence for role checks, is highly performant and secure, adhering to the DBAC principle.\n\nRegarding QAPs (Query-based Access Patterns), the structure supports efficient and secure listing operations:\n\n1.  **Employee Viewing Own Bookings:** Employees can securely query and list their own bookings from the '/bookings' collection using a `where('employeeId', '==', request.auth.uid)` clause. Because 'employeeId' is denormalized in each booking document, the security rules can efficiently validate this query, only returning documents where the `employeeId` matches the authenticated user's UID. This directly supports the QAP for employees viewing their booking history.\n2.  **Admin Viewing All Bookings/Vehicles:** Admins, identified by the existence of their UID in '/roles_admin/{adminId}', are granted broad access. They can list all documents in '/bookings' and '/vehicles' without additional query constraints, enabling comprehensive reporting and management features. The rules can simply check `exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid))` to grant this access.\n3.  **Employee Viewing All Vehicles:** All authenticated employees have read access to the '/vehicles' collection. This allows them to see available vehicles without any special query parameters, as per the application requirements. The security rules will permit `list` operations on '/vehicles' for any authenticated user.\n\nStructural segregation is applied by keeping distinct entities in their own top-level collections (e.g., 'users', 'vehicles', 'bookings'). This ensures a homogeneous security posture within each collection, simplifying rule logic. For instance, all documents in '/vehicles' have the same access requirements for employees (read-only) and admins (full CRUD). This design facilitates clear, robust, and easily debuggable security rules while ensuring scalability and performance."
+  }
+}
