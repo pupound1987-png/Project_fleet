@@ -15,41 +15,46 @@ import Image from "next/image";
 const AnimatedCarLogo = () => (
   <div className="relative flex flex-col items-center mb-6">
     <div className="relative p-8 bg-accent rounded-3xl shadow-2xl shadow-accent/40 overflow-hidden w-40 h-28 flex items-center justify-center border-b-4 border-accent-foreground/20">
-      {/* Road Lines moving Right to Left (Car moving Forward) */}
-      <div className="absolute bottom-4 left-0 w-full flex justify-around overflow-hidden h-[3px]">
-        <div className="w-8 h-full bg-white/50 animate-road-line"></div>
-        <div className="w-8 h-full bg-white/50 animate-road-line [animation-delay:0.3s]"></div>
-        <div className="w-8 h-full bg-white/50 animate-road-line [animation-delay:0.6s]"></div>
+      {/* Road Lines moving towards viewer (Front View) */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <div className="absolute top-1/2 left-1/2 w-[2px] h-10 bg-white/40 animate-road-line-incoming"></div>
+        <div className="absolute top-1/2 left-[40%] w-[2px] h-10 bg-white/40 animate-road-line-incoming [animation-delay:0.4s]"></div>
+        <div className="absolute top-1/2 left-[60%] w-[2px] h-10 bg-white/40 animate-road-line-incoming [animation-delay:0.8s]"></div>
       </div>
       
-      {/* Jeep Body Facing Right */}
-      <div className="relative animate-drive-vibration z-10 w-32">
-        <svg viewBox="0 0 120 60" className="w-32 h-16 text-white fill-current drop-shadow-xl">
-          {/* Jeep Chassis & Body */}
-          <path d="M5,45 L115,45 L115,30 L105,25 L105,10 L45,10 L40,25 L5,25 Z" />
-          {/* Windows */}
-          <path d="M48,13 L72,13 L72,25 L48,25 Z" fill="#1e293b" fillOpacity="0.5" />
-          <path d="M76,13 L100,13 L102,23 L76,25 Z" fill="#1e293b" fillOpacity="0.5" />
-          {/* Spare Tire on Back */}
-          <rect x="0" y="28" width="6" height="12" rx="2" fill="#334155" />
-          {/* Front Light */}
-          <circle cx="110" cy="35" r="3" fill="#fef08a" className="animate-pulse" />
-          {/* Wheel Arches */}
-          <path d="M15,45 Q27,30 40,45" fill="none" stroke="#1e293b" strokeWidth="2" />
-          <path d="M80,45 Q92,30 105,45" fill="none" stroke="#1e293b" strokeWidth="2" />
+      {/* Jeep Facing FRONT */}
+      <div className="relative animate-drive-vibration z-10 w-28">
+        <svg viewBox="0 0 100 80" className="w-28 h-24 text-white fill-current drop-shadow-2xl">
+          {/* Main Body */}
+          <path d="M10,65 L90,65 L90,35 L10,35 Z" />
+          {/* Windshield/Roof (Slightly transparent) */}
+          <path d="M22,35 L78,35 L72,12 L28,12 Z" fillOpacity="0.75" />
+          {/* Internal Windshield Detail */}
+          <path d="M26,16 L74,16 L70,32 L30,32 Z" fill="#1e293b" fillOpacity="0.4" />
+          
+          {/* Grille Area */}
+          <rect x="25" y="42" width="50" height="15" rx="2" fill="#1e293b" fillOpacity="0.6" />
+          {/* Grille Slots */}
+          <path d="M30,44 v11 M36,44 v11 M42,44 v11 M48,44 v11 M54,44 v11 M60,44 v11 M66,44 v11 M72,44 v11" 
+                stroke="white" strokeWidth="2" strokeOpacity="0.4" strokeLinecap="round" />
+          
+          {/* Headlights (Circular and Glowing) */}
+          <circle cx="18" cy="48" r="7" fill="#fef08a" className="animate-pulse" />
+          <circle cx="82" cy="48" r="7" fill="#fef08a" className="animate-pulse" />
+          <circle cx="18" cy="48" r="3" fill="white" />
+          <circle cx="82" cy="48" r="3" fill="white" />
+          
+          {/* Bumper */}
+          <rect x="5" y="62" width="90" height="6" rx="3" fill="#334155" />
+          
+          {/* Tires (Front View) */}
+          <rect x="8" y="65" width="16" height="12" rx="2" fill="#0f172a" />
+          <rect x="76" y="65" width="16" height="12" rx="2" fill="#0f172a" />
+          
+          {/* Side Mirrors */}
+          <path d="M10,38 L2,36 L2,42 Z" fillOpacity="0.8" />
+          <path d="M90,38 L98,36 L98,42 Z" fillOpacity="0.8" />
         </svg>
-
-        {/* Larger Off-road Wheels */}
-        <div className="absolute -bottom-2 left-4 w-8 h-8 bg-slate-900 rounded-full border-2 border-white/40 animate-spin [animation-duration:0.4s] shadow-inner">
-          <div className="w-full h-[3px] bg-white/40 absolute top-1/2 -translate-y-1/2"></div>
-          <div className="w-[3px] h-full bg-white/40 absolute left-1/2 -translate-x-1/2"></div>
-          <div className="absolute inset-1 rounded-full border border-white/20"></div>
-        </div>
-        <div className="absolute -bottom-2 right-4 w-8 h-8 bg-slate-900 rounded-full border-2 border-white/40 animate-spin [animation-duration:0.4s] shadow-inner">
-          <div className="w-full h-[3px] bg-white/40 absolute top-1/2 -translate-y-1/2"></div>
-          <div className="w-[3px] h-full bg-white/40 absolute left-1/2 -translate-x-1/2"></div>
-          <div className="absolute inset-1 rounded-full border border-white/20"></div>
-        </div>
       </div>
     </div>
   </div>
