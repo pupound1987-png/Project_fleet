@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -12,7 +13,8 @@ import { collection } from "firebase/firestore";
 
 export default function CalendarPage() {
   const [mounted, setMounted] = useState(false);
-  const [viewDate, setViewDate] = useState(new Date());
+  const [viewDate, setViewDate] = useState<Date>(new Date());
+  const [today, setToday] = useState<Date | null>(null);
 
   const db = useFirestore();
   const { user } = useUser();
@@ -32,6 +34,8 @@ export default function CalendarPage() {
 
   useEffect(() => {
     setMounted(true);
+    setToday(new Date());
+    setViewDate(new Date());
   }, []);
 
   const startDate = startOfWeek(viewDate);
@@ -87,7 +91,7 @@ export default function CalendarPage() {
                       {days.map(day => (
                         <th key={day.toString()} className="p-4 text-center border-b min-w-[120px]">
                           <div className="text-xs uppercase text-muted-foreground">{format(day, 'EEE')}</div>
-                          <div className={`text-lg font-bold mt-1 ${isSameDay(day, new Date()) ? 'text-primary' : ''}`}>
+                          <div className={`text-lg font-bold mt-1 ${today && isSameDay(day, today) ? 'text-primary' : ''}`}>
                             {format(day, 'dd')}
                           </div>
                         </th>
