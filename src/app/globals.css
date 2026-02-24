@@ -49,22 +49,23 @@
 
 @keyframes drive-vibration {
   0% { transform: translateY(0); }
-  50% { transform: translateY(-1.5px); }
+  50% { transform: translateY(-2px); }
   100% { transform: translateY(0); }
 }
 
-@keyframes road-line {
-  0% { transform: translateX(100%); opacity: 0; }
-  50% { opacity: 0.5; }
+@keyframes road-line-forward {
+  0% { transform: translateX(200%); opacity: 0; }
+  20% { opacity: 0.6; }
+  80% { opacity: 0.6; }
   100% { transform: translateX(-200%); opacity: 0; }
 }
 
 .animate-drive-vibration {
-  animation: drive-vibration 0.3s ease-in-out infinite;
+  animation: drive-vibration 0.2s ease-in-out infinite;
 }
 
 .animate-road-line {
-  animation: road-line 1.5s linear infinite;
+  animation: road-line-forward 1s linear infinite;
 }
 
 .hover-card-effect {

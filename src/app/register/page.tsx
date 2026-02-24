@@ -15,30 +15,34 @@ import Image from "next/image";
 
 const AnimatedCarLogo = () => (
   <div className="relative flex flex-col items-center mb-6">
-    <div className="relative p-6 bg-accent rounded-3xl shadow-2xl shadow-accent/30 overflow-hidden">
-      {/* Animated Road Lines */}
-      <div className="absolute bottom-2 left-0 w-full flex justify-around overflow-hidden h-[2px]">
-        <div className="w-4 h-full bg-white/40 animate-road-line"></div>
-        <div className="w-4 h-full bg-white/40 animate-road-line [animation-delay:0.5s]"></div>
-        <div className="w-4 h-full bg-white/40 animate-road-line [animation-delay:1s]"></div>
+    <div className="relative p-8 bg-accent rounded-3xl shadow-2xl shadow-accent/40 overflow-hidden w-32 h-24 flex items-center justify-center">
+      {/* Road Lines moving Right to Left (Car moving Forward) */}
+      <div className="absolute bottom-4 left-0 w-full flex justify-around overflow-hidden h-[3px]">
+        <div className="w-6 h-full bg-white/50 animate-road-line"></div>
+        <div className="w-6 h-full bg-white/50 animate-road-line [animation-delay:0.3s]"></div>
+        <div className="w-6 h-full bg-white/50 animate-road-line [animation-delay:0.6s]"></div>
       </div>
       
-      {/* Car Body with Vibration */}
-      <div className="relative animate-drive-vibration">
-        <svg viewBox="0 0 100 50" className="w-16 h-10 text-white fill-current drop-shadow-md">
-          <path d="M10,35 Q10,25 20,20 L35,15 Q40,5 55,5 L75,5 Q85,10 90,20 L95,35 Z" />
-          <path d="M38,15 L52,10 L72,10 L70,18 L38,18 Z" fill="#1e293b" fillOpacity="0.3" />
-          <circle cx="90" cy="25" r="2" fill="#fef08a" />
+      {/* Car Body Facing Right */}
+      <div className="relative animate-drive-vibration z-10">
+        <svg viewBox="0 0 100 50" className="w-20 h-12 text-white fill-current drop-shadow-lg">
+          {/* Improved Car Shape - Facing Right */}
+          <path d="M5,35 L15,35 Q15,35 18,30 L25,15 Q30,5 50,5 L75,5 Q90,5 95,25 L98,35 Z" />
+          {/* Windshield & Windows */}
+          <path d="M55,8 L73,8 Q82,8 85,18 L83,22 L55,22 Z" fill="#1e293b" fillOpacity="0.4" />
+          <path d="M32,15 L50,10 L50,22 L28,22 Z" fill="#1e293b" fillOpacity="0.4" />
+          {/* Headlight */}
+          <circle cx="94" cy="22" r="2" fill="#fef08a" className="animate-pulse" />
         </svg>
 
         {/* Spinning Wheels */}
-        <div className="absolute -bottom-1 left-3 w-4 h-4 bg-slate-900 rounded-full border border-white/40 animate-spin">
-          <div className="w-full h-[1px] bg-white/60 absolute top-1/2 -translate-y-1/2"></div>
-          <div className="w-full h-[1px] bg-white/60 absolute top-1/2 -translate-y-1/2 rotate-90"></div>
+        <div className="absolute -bottom-1 left-4 w-5 h-5 bg-slate-900 rounded-full border-2 border-white/40 animate-spin [animation-duration:0.4s]">
+          <div className="w-full h-[2px] bg-white/60 absolute top-1/2 -translate-y-1/2"></div>
+          <div className="w-[2px] h-full bg-white/60 absolute left-1/2 -translate-x-1/2"></div>
         </div>
-        <div className="absolute -bottom-1 right-3 w-4 h-4 bg-slate-900 rounded-full border border-white/40 animate-spin">
-          <div className="w-full h-[1px] bg-white/60 absolute top-1/2 -translate-y-1/2"></div>
-          <div className="w-full h-[1px] bg-white/60 absolute top-1/2 -translate-y-1/2 rotate-90"></div>
+        <div className="absolute -bottom-1 right-4 w-5 h-5 bg-slate-900 rounded-full border-2 border-white/40 animate-spin [animation-duration:0.4s]">
+          <div className="w-full h-[2px] bg-white/60 absolute top-1/2 -translate-y-1/2"></div>
+          <div className="w-[2px] h-full bg-white/60 absolute left-1/2 -translate-x-1/2"></div>
         </div>
       </div>
     </div>
