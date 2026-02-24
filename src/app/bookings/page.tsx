@@ -16,29 +16,70 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { MOCK_VEHICLES } from "@/lib/mock-data";
 import { useToast } from "@/hooks/use-toast";
 import { Calendar as CalendarIcon, MapPin, ClipboardList, Phone, Clock } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, useUser } from "@/firebase";
+import { collection, serverTimestamp } from "firebase/firestore";
 
 export default function BookingsPage() {
   const { toast } = useToast();
   const router = useRouter();
+  const db = useFirestore();
+  const { user } = useUser();
+  
+  const vehiclesRef = useMemoFirebase(() => collection(db, "vehicles"), [db]);
+  const bookingsRef = useMemoFirebase(() => collection(db, "bookings"), [db]);
+  const { data: vehicles } = useCollection(vehiclesRef);
+
   const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    vehicleId: '',
+    phone: '',
+    startDateTime: '',
+    endDateTime: '',
+    destination: '',
+    purpose: ''
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) {
+      toast({ variant: "destructive", title: "Authentication required", description: "Please log in." });
+      return;
+    }
+
     setLoading(true);
     
-    // Simulate API call and Line notification
+    const selectedVehicle = vehicles?.find(v => v.id === formData.vehicleId);
+
+    const bookingData = {
+      bookingId: `B${Date.now()}`,
+      vehicleId: formData.vehicleId,
+      vehicleName: selectedVehicle?.vehicleName || 'Unknown',
+      employeeEmail: user.email,
+      employeeName: user.displayName || 'admin',
+      employeeId: user.uid,
+      department: 'General', // Default or fetch from user profile
+      phone: formData.phone,
+      destination: formData.destination,
+      startDateTime: formData.startDateTime,
+      endDateTime: formData.endDateTime,
+      purpose: formData.purpose,
+      status: 'Pending',
+      createdAt: new Date().toISOString()
+    };
+
+    addDocumentNonBlocking(bookingsRef, bookingData);
+
     setTimeout(() => {
       setLoading(false);
       toast({
         title: "Booking Requested | ส่งคำขอจองแล้ว",
-        description: "Your vehicle request has been sent to admin and Line notification triggered. (คำขอของคุณส่งไปแล้วและแจ้งเตือนผ่าน Line เรียบร้อย)",
+        description: "Your vehicle request has been sent to admin and Line notification triggered.",
       });
       router.push("/");
-    }, 1500);
+    }, 1000);
   };
 
   return (
@@ -63,14 +104,14 @@ export default function BookingsPage() {
                     <Label className="text-sm font-semibold flex items-center gap-2">
                       <CalendarIcon className="w-3 h-3" /> Select Vehicle | เลือกยานพาหนะ
                     </Label>
-                    <Select required>
+                    <Select required onValueChange={(val) => setFormData({...formData, vehicleId: val})}>
                       <SelectTrigger className="bg-white">
                         <SelectValue placeholder="Choose an available car | เลือกรถที่ว่าง" />
                       </SelectTrigger>
                       <SelectContent>
-                        {MOCK_VEHICLES.filter(v => v.status === 'Available').map(v => (
+                        {vehicles?.filter(v => v.status === 'Available').map(v => (
                           <SelectItem key={v.id} value={v.id}>
-                            {v.name} ({v.licensePlate}) - {v.capacity} Seats
+                            {v.vehicleName} ({v.licensePlate}) - {v.capacity} Seats
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -80,7 +121,13 @@ export default function BookingsPage() {
                     <Label className="text-sm font-semibold flex items-center gap-2">
                       <Phone className="w-3 h-3" /> Contact Phone | เบอร์โทรศัพท์ติดต่อ
                     </Label>
-                    <Input placeholder="08x-xxx-xxxx" required className="bg-white" />
+                    <Input 
+                      placeholder="08x-xxx-xxxx" 
+                      required 
+                      className="bg-white"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                    />
                   </div>
                 </div>
 
@@ -89,13 +136,23 @@ export default function BookingsPage() {
                     <Label className="text-sm font-semibold flex items-center gap-2">
                       <Clock className="w-3 h-3" /> Start Date & Time | วันที่และเวลาเริ่มต้น
                     </Label>
-                    <Input type="datetime-local" required className="bg-white" />
+                    <Input 
+                      type="datetime-local" 
+                      required 
+                      className="bg-white" 
+                      onChange={(e) => setFormData({...formData, startDateTime: e.target.value})}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-sm font-semibold flex items-center gap-2">
                       <Clock className="w-3 h-3" /> End Date & Time | วันที่และเวลาสิ้นสุด
                     </Label>
-                    <Input type="datetime-local" required className="bg-white" />
+                    <Input 
+                      type="datetime-local" 
+                      required 
+                      className="bg-white"
+                      onChange={(e) => setFormData({...formData, endDateTime: e.target.value})}
+                    />
                   </div>
                 </div>
 
@@ -103,14 +160,24 @@ export default function BookingsPage() {
                   <Label className="text-sm font-semibold flex items-center gap-2">
                     <MapPin className="w-3 h-3" /> Destination | สถานที่จุดหมาย
                   </Label>
-                  <Input placeholder="Where are you going? | คุณกำลังจะไปที่ไหน?" required className="bg-white" />
+                  <Input 
+                    placeholder="Where are you going? | คุณกำลังจะไปที่ไหน?" 
+                    required 
+                    className="bg-white"
+                    onChange={(e) => setFormData({...formData, destination: e.target.value})}
+                  />
                 </div>
 
                 <div className="space-y-2">
                   <Label className="text-sm font-semibold flex items-center gap-2">
                     <ClipboardList className="w-3 h-3" /> Purpose of Trip | วัตถุประสงค์การเดินทาง
                   </Label>
-                  <Textarea placeholder="Describe the reason for this booking | ระบุเหตุผลในการจองรถ" required className="bg-white min-h-[100px]" />
+                  <Textarea 
+                    placeholder="Describe the reason for this booking | ระบุเหตุผลในการจองรถ" 
+                    required 
+                    className="bg-white min-h-[100px]"
+                    onChange={(e) => setFormData({...formData, purpose: e.target.value})}
+                  />
                 </div>
 
                 <div className="flex justify-end gap-3 pt-4">

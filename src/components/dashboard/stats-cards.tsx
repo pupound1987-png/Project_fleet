@@ -3,13 +3,21 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Car, CheckCircle2, Clock, AlertTriangle } from "lucide-react";
-import { MOCK_VEHICLES, MOCK_BOOKINGS } from "@/lib/mock-data";
+import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { collection } from "firebase/firestore";
 
 export function StatsCards() {
-  const totalVehicles = MOCK_VEHICLES.length;
-  const inUse = MOCK_VEHICLES.filter(v => v.status === 'In Use').length;
-  const pending = MOCK_BOOKINGS.filter(b => b.status === 'Pending').length;
-  const maintenance = MOCK_VEHICLES.filter(v => v.status === 'Maintenance').length;
+  const db = useFirestore();
+  const vehiclesRef = useMemoFirebase(() => collection(db, "vehicles"), [db]);
+  const bookingsRef = useMemoFirebase(() => collection(db, "bookings"), [db]);
+  
+  const { data: vehicles } = useCollection(vehiclesRef);
+  const { data: bookings } = useCollection(bookingsRef);
+
+  const totalVehicles = vehicles?.length || 0;
+  const inUse = vehicles?.filter(v => v.status === 'In Use').length || 0;
+  const pending = bookings?.filter(b => b.status === 'Pending').length || 0;
+  const maintenance = vehicles?.filter(v => v.status === 'Maintenance').length || 0;
 
   const stats = [
     { title: "Total Vehicles", titleTh: "ยานพาหนะทั้งหมด", value: totalVehicles, icon: Car, color: "text-blue-500" },

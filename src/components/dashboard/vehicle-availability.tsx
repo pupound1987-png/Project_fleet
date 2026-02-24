@@ -2,7 +2,6 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MOCK_VEHICLES } from "@/lib/mock-data";
 import { Badge } from "@/components/ui/badge";
 import { 
   Table, 
@@ -13,8 +12,14 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { Bus, Truck, CarFront } from "lucide-react";
+import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { collection } from "firebase/firestore";
 
 export function VehicleAvailability() {
+  const db = useFirestore();
+  const vehiclesRef = useMemoFirebase(() => collection(db, "vehicles"), [db]);
+  const { data: vehicles } = useCollection(vehiclesRef);
+
   const getIcon = (type: string) => {
     switch (type) {
       case 'Van': return <Bus className="w-4 h-4" />;
@@ -49,9 +54,9 @@ export function VehicleAvailability() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {MOCK_VEHICLES.map((vehicle) => (
+            {vehicles?.map((vehicle) => (
               <TableRow key={vehicle.id} className="border-b border-blue-50">
-                <TableCell className="font-medium text-blue-950">{vehicle.name}</TableCell>
+                <TableCell className="font-medium text-blue-950">{vehicle.vehicleName}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2 text-muted-foreground">
                     {getIcon(vehicle.type)}

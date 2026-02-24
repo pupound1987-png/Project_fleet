@@ -5,7 +5,6 @@ import { useState } from "react";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/sidebar";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from "@/components/ui/card";
-import { MOCK_VEHICLES, type Vehicle, type VehicleType, type VehicleStatus } from "@/lib/mock-data";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,22 +16,28 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { Users, Car as CarIcon, Trash2, Plus, Info, License } from "lucide-react";
+import { Users, Car as CarIcon, Trash2, Plus, Info } from "lucide-react";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
+import { useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
+import { collection, doc } from "firebase/firestore";
+
+export type VehicleType = 'Van' | 'Pickup' | 'Sedan';
+export type VehicleStatus = 'Available' | 'Maintenance' | 'Booked' | 'In Use';
 
 export default function VehiclesPage() {
   const { toast } = useToast();
-  const [vehicles, setVehicles] = useState<Vehicle[]>(MOCK_VEHICLES);
+  const db = useFirestore();
+  const vehiclesRef = useMemoFirebase(() => collection(db, "vehicles"), [db]);
+  const { data: vehicles, isLoading } = useCollection(vehiclesRef);
+
   const [isAdding, setIsAdding] = useState(false);
-  
-  // Form State
-  const [newVehicle, setNewVehicle] = useState<Partial<Vehicle>>({
+  const [newVehicle, setNewVehicle] = useState({
     name: '',
     licensePlate: '',
-    type: 'Sedan',
+    type: 'Sedan' as VehicleType,
     capacity: 4,
-    status: 'Available',
+    status: 'Available' as VehicleStatus,
     remark: ''
   });
 
@@ -56,17 +61,18 @@ export default function VehiclesPage() {
       return;
     }
 
-    const vehicle: Vehicle = {
-      id: `V${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
-      name: newVehicle.name!,
-      licensePlate: newVehicle.licensePlate!,
-      type: (newVehicle.type as VehicleType) || 'Sedan',
-      capacity: newVehicle.capacity || 4,
-      status: (newVehicle.status as VehicleStatus) || 'Available',
-      remark: newVehicle.remark || ''
+    const vehicleData = {
+      vehicleId: `V${Date.now()}`,
+      vehicleName: newVehicle.name,
+      licensePlate: newVehicle.licensePlate,
+      type: newVehicle.type,
+      capacity: newVehicle.capacity,
+      status: newVehicle.status,
+      remark: newVehicle.remark
     };
 
-    setVehicles([vehicle, ...vehicles]);
+    addDocumentNonBlocking(vehiclesRef, vehicleData);
+    
     setIsAdding(false);
     setNewVehicle({ name: '', licensePlate: '', type: 'Sedan', capacity: 4, status: 'Available', remark: '' });
     
@@ -77,7 +83,8 @@ export default function VehiclesPage() {
   };
 
   const deleteVehicle = (id: string) => {
-    setVehicles(vehicles.filter(v => v.id !== id));
+    const docRef = doc(db, "vehicles", id);
+    deleteDocumentNonBlocking(docRef);
     toast({
       title: "Deleted | ลบข้อมูลแล้ว",
       description: "Vehicle has been removed from the system. (ลบข้อมูลยานพาหนะออกจากระบบแล้ว)",
@@ -192,67 +199,70 @@ export default function VehiclesPage() {
             </Card>
           )}
 
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {vehicles.map((vehicle) => (
-              <Card key={vehicle.id} className="overflow-hidden shadow-sm border-none group hover:shadow-xl transition-all duration-300">
-                <div className="relative h-48 w-full overflow-hidden">
-                  <Image 
-                    src={getVehicleImage(vehicle.type)} 
-                    alt={vehicle.name}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-500"
-                    data-ai-hint={vehicle.type.toLowerCase() + " car"}
-                  />
-                  <div className="absolute top-2 right-2 flex gap-2">
-                    <Badge className={
-                      vehicle.status === 'Available' ? 'bg-green-500' : 
-                      vehicle.status === 'Maintenance' ? 'bg-red-500' : 'bg-blue-500'
-                    }>
-                      {vehicle.status === 'Available' ? 'ว่าง' : 
-                       vehicle.status === 'Maintenance' ? 'ซ่อมบำรุง' : 
-                       vehicle.status === 'In Use' ? 'กำลังใช้' : vehicle.status}
-                    </Badge>
-                  </div>
-                </div>
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle className="text-xl font-bold text-blue-900">{vehicle.name}</CardTitle>
-                      <p className="text-sm text-muted-foreground font-mono">{vehicle.licensePlate}</p>
-                    </div>
-                    <Badge variant="outline" className="text-xs uppercase tracking-tighter bg-accent/30">{vehicle.type}</Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1.5">
-                      <Users className="w-4 h-4 text-primary" />
-                      <span>{vehicle.capacity} Seats | ที่นั่ง</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <CarIcon className="w-4 h-4 text-primary" />
-                      <span>{vehicle.type === 'Van' ? 'รถตู้' : vehicle.type === 'Sedan' ? 'รถเก๋ง' : 'รถกระบะ'}</span>
+          {isLoading ? (
+            <div className="text-center py-20">Loading fleet data... (กำลังโหลดข้อมูลฟลีท...)</div>
+          ) : (
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {vehicles?.map((vehicle) => (
+                <Card key={vehicle.id} className="overflow-hidden shadow-sm border-none group hover:shadow-xl transition-all duration-300">
+                  <div className="relative h-48 w-full overflow-hidden">
+                    <Image 
+                      src={getVehicleImage(vehicle.type)} 
+                      alt={vehicle.vehicleName}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute top-2 right-2 flex gap-2">
+                      <Badge className={
+                        vehicle.status === 'Available' ? 'bg-green-500' : 
+                        vehicle.status === 'Maintenance' ? 'bg-red-500' : 'bg-blue-500'
+                      }>
+                        {vehicle.status === 'Available' ? 'ว่าง' : 
+                         vehicle.status === 'Maintenance' ? 'ซ่อมบำรุง' : 
+                         vehicle.status === 'In Use' ? 'กำลังใช้' : vehicle.status}
+                      </Badge>
                     </div>
                   </div>
-                  {vehicle.remark && (
-                    <p className="text-xs text-muted-foreground bg-blue-50/50 p-2 rounded italic">
-                      Note: {vehicle.remark}
-                    </p>
-                  )}
-                </CardContent>
-                <CardFooter className="bg-blue-50/30 p-4 border-t border-blue-100 flex justify-between gap-2">
-                  <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-700 hover:bg-red-50" onClick={() => deleteVehicle(vehicle.id)}>
-                    <Trash2 className="w-4 h-4 mr-2" /> Remove | ลบ
-                  </Button>
-                  <Button variant="outline" size="sm" asChild className="border-primary text-blue-900">
-                    <a href={`/calendar?vehicle=${vehicle.id}`}>
-                      <Info className="w-4 h-4 mr-2" /> Details | รายละเอียด
-                    </a>
-                  </Button>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
+                  <CardHeader>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <CardTitle className="text-xl font-bold text-blue-900">{vehicle.vehicleName}</CardTitle>
+                        <p className="text-sm text-muted-foreground font-mono">{vehicle.licensePlate}</p>
+                      </div>
+                      <Badge variant="outline" className="text-xs uppercase tracking-tighter bg-accent/30">{vehicle.type}</Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-1.5">
+                        <Users className="w-4 h-4 text-primary" />
+                        <span>{vehicle.capacity} Seats | ที่นั่ง</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <CarIcon className="w-4 h-4 text-primary" />
+                        <span>{vehicle.type}</span>
+                      </div>
+                    </div>
+                    {vehicle.remark && (
+                      <p className="text-xs text-muted-foreground bg-blue-50/50 p-2 rounded italic">
+                        Note: {vehicle.remark}
+                      </p>
+                    )}
+                  </CardContent>
+                  <CardFooter className="bg-blue-50/30 p-4 border-t border-blue-100 flex justify-between gap-2">
+                    <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-700 hover:bg-red-50" onClick={() => deleteVehicle(vehicle.id)}>
+                      <Trash2 className="w-4 h-4 mr-2" /> Remove | ลบ
+                    </Button>
+                    <Button variant="outline" size="sm" asChild className="border-primary text-blue-900">
+                      <a href={`/calendar?vehicle=${vehicle.id}`}>
+                        <Info className="w-4 h-4 mr-2" /> Details | รายละเอียด
+                      </a>
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+          )}
         </main>
       </SidebarInset>
     </SidebarProvider>

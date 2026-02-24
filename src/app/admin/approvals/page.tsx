@@ -5,25 +5,32 @@ import { useEffect, useState } from "react";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/sidebar";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { MOCK_BOOKINGS } from "@/lib/mock-data";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { ShieldCheck, Check, X, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking } from "@/firebase";
+import { collection, query, where, doc } from "firebase/firestore";
 
 export default function AdminApprovalsPage() {
   const { toast } = useToast();
   const [mounted, setMounted] = useState(false);
+  const db = useFirestore();
+  const bookingsQuery = useMemoFirebase(() => query(collection(db, "bookings"), where("status", "==", "Pending")), [db]);
+  const { data: bookings, isLoading } = useCollection(bookingsQuery);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const handleAction = (id: string, action: 'approve' | 'reject') => {
+  const handleAction = (id: string, action: 'Approved' | 'Rejected') => {
+    const docRef = doc(db, "bookings", id);
+    updateDocumentNonBlocking(docRef, { status: action });
+    
     toast({
-      title: action === 'approve' ? "Approved | อนุมัติแล้ว" : "Rejected | ปฏิเสธแล้ว",
-      description: `Booking ${id} has been ${action}d. (รายการ ${id} ได้รับการ${action === 'approve' ? 'อนุมัติ' : 'ปฏิเสธ'}เรียบร้อยแล้ว)`,
+      title: action === 'Approved' ? "Approved | อนุมัติแล้ว" : "Rejected | ปฏิเสธแล้ว",
+      description: `Booking has been ${action.toLowerCase()}.`,
     });
   };
 
@@ -43,12 +50,14 @@ export default function AdminApprovalsPage() {
           </div>
 
           <div className="grid gap-6">
-            {MOCK_BOOKINGS.filter(b => b.status === 'Pending').length === 0 ? (
+            {isLoading ? (
+              <div className="text-center py-12">Loading requests...</div>
+            ) : (!bookings || bookings.length === 0) ? (
               <div className="text-center py-12 text-muted-foreground">
                 No pending requests. (ไม่มีรายการที่รอการอนุมัติ)
               </div>
             ) : (
-              MOCK_BOOKINGS.filter(b => b.status === 'Pending').map((booking) => (
+              bookings.map((booking) => (
                 <Card key={booking.id} className="shadow-lg border-l-4 border-l-yellow-400">
                   <CardHeader className="pb-2">
                     <div className="flex justify-between items-start">
@@ -70,7 +79,7 @@ export default function AdminApprovalsPage() {
                       <div>
                         <p className="font-semibold text-blue-900">Time | เวลา</p>
                         <p>
-                          {mounted ? `${format(new Date(booking.startDateTime), 'dd MMM yyyy, HH:mm')} - ${format(new Date(booking.endDateTime), 'HH:mm')}` : '...'}
+                          {mounted && booking.startDateTime ? `${format(new Date(booking.startDateTime), 'dd MMM yyyy, HH:mm')} - ${format(new Date(booking.endDateTime), 'HH:mm')}` : '...'}
                         </p>
                       </div>
                       <div className="md:col-span-2">
@@ -79,10 +88,10 @@ export default function AdminApprovalsPage() {
                       </div>
                     </div>
                     <div className="flex justify-end gap-3">
-                      <Button variant="outline" className="text-red-500 border-red-200 hover:bg-red-50" onClick={() => handleAction(booking.id, 'reject')}>
+                      <Button variant="outline" className="text-red-500 border-red-200 hover:bg-red-50" onClick={() => handleAction(booking.id, 'Rejected')}>
                         <X className="w-4 h-4 mr-2" /> Reject | ปฏิเสธ
                       </Button>
-                      <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={() => handleAction(booking.id, 'approve')}>
+                      <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={() => handleAction(booking.id, 'Approved')}>
                         <Check className="w-4 h-4 mr-2" /> Approve | อนุมัติ
                       </Button>
                     </div>
