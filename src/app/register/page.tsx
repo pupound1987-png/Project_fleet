@@ -15,36 +15,37 @@ import Image from "next/image";
 
 const AnimatedCarLogo = () => (
   <div className="relative flex flex-col items-center mb-6">
-    <div className="relative p-8 bg-accent rounded-3xl shadow-2xl shadow-accent/40 overflow-hidden w-32 h-24 flex items-center justify-center border-b-4 border-accent-foreground/20">
+    <div className="relative p-8 bg-accent rounded-3xl shadow-2xl shadow-accent/40 overflow-hidden w-40 h-24 flex items-center justify-center border-b-4 border-accent-foreground/20">
       {/* Road Lines moving Right to Left (Car moving Forward) */}
       <div className="absolute bottom-4 left-0 w-full flex justify-around overflow-hidden h-[3px]">
-        <div className="w-6 h-full bg-white/50 animate-road-line"></div>
-        <div className="w-6 h-full bg-white/50 animate-road-line [animation-delay:0.3s]"></div>
-        <div className="w-6 h-full bg-white/50 animate-road-line [animation-delay:0.6s]"></div>
+        <div className="w-8 h-full bg-white/50 animate-road-line"></div>
+        <div className="w-8 h-full bg-white/50 animate-road-line [animation-delay:0.3s]"></div>
+        <div className="w-8 h-full bg-white/50 animate-road-line [animation-delay:0.6s]"></div>
       </div>
       
-      {/* Van Body Facing Right */}
-      <div className="relative animate-drive-vibration z-10">
-        <svg viewBox="0 0 100 50" className="w-20 h-14 text-white fill-current drop-shadow-xl">
-          {/* Van Body Shape */}
-          <path d="M5,35 L90,35 L90,12 Q90,5 82,5 L15,5 Q5,5 5,12 Z" />
-          {/* Windshield */}
-          <path d="M72,8 L85,8 Q88,8 88,14 L88,20 L72,20 Z" fill="#1e293b" fillOpacity="0.5" />
-          {/* Side Windows */}
-          <path d="M12,8 L35,8 L35,20 L12,20 Z" fill="#1e293b" fillOpacity="0.5" />
-          <path d="M40,8 L68,8 L68,20 L40,20 Z" fill="#1e293b" fillOpacity="0.5" />
+      {/* Long Van Body Facing Right */}
+      <div className="relative animate-drive-vibration z-10 w-32">
+        <svg viewBox="0 0 120 50" className="w-32 h-14 text-white fill-current drop-shadow-xl">
+          {/* Long Van Body Shape */}
+          <path d="M2,38 L118,38 L118,12 Q118,5 110,5 L15,5 Q2,5 2,15 Z" />
+          {/* Large Windshield */}
+          <path d="M95,8 L112,8 Q115,8 115,14 L115,22 L95,22 Z" fill="#1e293b" fillOpacity="0.5" />
+          {/* Passenger Windows */}
+          <path d="M8,8 L32,8 L32,22 L8,22 Z" fill="#1e293b" fillOpacity="0.5" />
+          <path d="M36,8 L62,8 L62,22 L36,22 Z" fill="#1e293b" fillOpacity="0.5" />
+          <path d="M66,8 L92,8 L92,22 L66,22 Z" fill="#1e293b" fillOpacity="0.5" />
           {/* Headlight */}
-          <rect x="85" y="24" width="4" height="4" rx="1" fill="#fef08a" className="animate-pulse" />
+          <rect x="114" y="26" width="4" height="4" rx="1" fill="#fef08a" className="animate-pulse" />
           {/* Tail light */}
-          <rect x="6" y="24" width="3" height="6" rx="1" fill="#ef4444" />
+          <rect x="2" y="26" width="3" height="8" rx="1" fill="#ef4444" />
         </svg>
 
-        {/* Spinning Wheels */}
-        <div className="absolute -bottom-1 left-4 w-6 h-6 bg-slate-900 rounded-full border-2 border-white/40 animate-spin [animation-duration:0.3s] shadow-inner">
+        {/* Wheels positioned further apart (Long Wheelbase) */}
+        <div className="absolute -bottom-1 left-2 w-7 h-7 bg-slate-900 rounded-full border-2 border-white/40 animate-spin [animation-duration:0.4s] shadow-inner">
           <div className="w-full h-[2px] bg-white/60 absolute top-1/2 -translate-y-1/2"></div>
           <div className="w-[2px] h-full bg-white/60 absolute left-1/2 -translate-x-1/2"></div>
         </div>
-        <div className="absolute -bottom-1 right-4 w-6 h-6 bg-slate-900 rounded-full border-2 border-white/40 animate-spin [animation-duration:0.3s] shadow-inner">
+        <div className="absolute -bottom-1 right-2 w-7 h-7 bg-slate-900 rounded-full border-2 border-white/40 animate-spin [animation-duration:0.4s] shadow-inner">
           <div className="w-full h-[2px] bg-white/60 absolute top-1/2 -translate-y-1/2"></div>
           <div className="w-[2px] h-full bg-white/60 absolute left-1/2 -translate-x-1/2"></div>
         </div>
@@ -141,7 +142,7 @@ export default function RegisterPage() {
                   placeholder="Full Name | ชื่อ-นามสกุล" 
                   className="pl-12 py-6 bg-white/10 border-white/10 text-white placeholder:text-slate-500 rounded-xl focus:ring-accent"
                   value={name}
-                  onChange={(setName as any)}
+                  onChange={(e) => setName(e.target.value)}
                   required
                 />
               </div>
@@ -159,7 +160,7 @@ export default function RegisterPage() {
               </div>
               
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-4 heart-400 w-5 h-5" />
                 <Input 
                   type="password"
                   placeholder="Password | รหัสผ่าน" 
