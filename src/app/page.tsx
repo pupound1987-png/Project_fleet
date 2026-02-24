@@ -32,7 +32,8 @@ export default function DashboardPage() {
     // Wait for user and profile to be ready to avoid permission errors
     if (!db || !user || isProfileLoading) return null;
     
-    // If Admin, see all. If Employee, only see own for the main list (though rules allow more)
+    // If Admin, see all. If Employee, only see own for the main list
+    // The rules allow 'list' for all, but we filter for a better UX
     if (isAdmin) {
       return collection(db, "bookings");
     } else {

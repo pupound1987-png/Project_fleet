@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -19,6 +18,7 @@ export default function CalendarPage() {
   const db = useFirestore();
   const { user } = useUser();
   
+  // Guard references to ensure they are only created when dependencies are ready
   const vehiclesRef = useMemoFirebase(() => {
     if (!db || !user) return null;
     return collection(db, "vehicles");

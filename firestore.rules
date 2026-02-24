@@ -23,28 +23,35 @@ service cloud.firestore {
     // --- Collection Rules ---
 
     match /users/{userId} {
+      // Allow users to see their own profile or admins to see any
       allow get: if isOwner(userId) || isAdmin();
+      // Only admins can list users
       allow list: if isAdmin();
+      // Allow creation during registration
       allow create: if isOwner(userId);
+      // Allow users to update their own profile or admins
       allow update: if isOwner(userId) || isAdmin();
+      // Only admins can delete
       allow delete: if isAdmin();
     }
 
     match /roles_admin/{adminId} {
+      // Allow any signed in user to check if someone is an admin (used by exists() checks)
       allow read: if isSignedIn();
+      // Only existing admins can manage other admin roles
       allow write: if isAdmin();
     }
 
     match /vehicles/{vehicleId} {
+      // All authenticated users can see the vehicle fleet
       allow read: if isSignedIn();
+      // Only admins can add, update or remove vehicles
       allow write: if isAdmin();
     }
 
     match /bookings/{bookingId} {
-      // Explicitly allow get and list for all signed in users
-      // This is required for the fleet calendar and availability checks
-      allow get: if isSignedIn();
-      allow list: if isSignedIn();
+      // All authenticated users can see bookings (required for the calendar and availability)
+      allow read: if isSignedIn();
 
       // Only allow creation if the employeeId matches the authenticated user
       allow create: if isSignedIn() 
