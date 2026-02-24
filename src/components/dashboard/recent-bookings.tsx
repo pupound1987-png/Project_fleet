@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -6,18 +5,34 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
-import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
-import { collection, query, limit, orderBy } from "firebase/firestore";
+import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from "@/firebase";
+import { collection, query, limit, orderBy, where, doc } from "firebase/firestore";
 
 export function RecentBookings() {
   const [mounted, setMounted] = useState(false);
   const db = useFirestore();
   const { user } = useUser();
 
+  // Fetch user profile to determine role
+  const profileRef = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return doc(db, "users", user.uid);
+  }, [db, user]);
+  const { data: profile } = useDoc(profileRef);
+  const isAdmin = profile?.role === 'Admin';
+
   const bookingsQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return query(collection(db, "bookings"), orderBy("createdAt", "desc"), limit(5));
-  }, [db, user]);
+    
+    const baseQuery = collection(db, "bookings");
+    
+    // Admins see all, Employees see only their own
+    if (isAdmin) {
+      return query(baseQuery, orderBy("createdAt", "desc"), limit(5));
+    } else {
+      return query(baseQuery, where("employeeId", "==", user.uid), orderBy("createdAt", "desc"), limit(5));
+    }
+  }, [db, user, isAdmin]);
 
   const { data: bookings } = useCollection(bookingsQuery);
 
@@ -48,7 +63,9 @@ export function RecentBookings() {
   return (
     <Card className="shadow-sm border-none bg-white">
       <CardHeader>
-        <CardTitle className="text-lg font-bold text-blue-900">Recent Bookings | การจองล่าสุด</CardTitle>
+        <CardTitle className="text-lg font-bold text-blue-900">
+          {isAdmin ? "Recent All Bookings | การจองล่าสุดทั้งหมด" : "My Recent Bookings | การจองล่าสุดของฉัน"}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">

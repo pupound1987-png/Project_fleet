@@ -2,13 +2,21 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle2, Clock, AlertTriangle, Car as CarIcon } from "lucide-react";
-import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
-import { collection } from "firebase/firestore";
+import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from "@/firebase";
+import { collection, query, where, doc } from "firebase/firestore";
 import { cn } from "@/lib/utils";
 
 export function StatsCards() {
   const db = useFirestore();
   const { user } = useUser();
+
+  // Fetch user profile to determine role
+  const profileRef = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return doc(db, "users", user.uid);
+  }, [db, user]);
+  const { data: profile } = useDoc(profileRef);
+  const isAdmin = profile?.role === 'Admin';
 
   const vehiclesRef = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -17,15 +25,20 @@ export function StatsCards() {
 
   const bookingsRef = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return collection(db, "bookings");
-  }, [db, user]);
+    // Admins see all pending, Employees see only their pending
+    if (isAdmin) {
+      return collection(db, "bookings");
+    } else {
+      return query(collection(db, "bookings"), where("employeeId", "==", user.uid));
+    }
+  }, [db, user, isAdmin]);
   
   const { data: vehicles } = useCollection(vehiclesRef);
   const { data: bookings } = useCollection(bookingsRef);
 
   const totalVehicles = vehicles?.length || 0;
   const inUse = vehicles?.filter(v => v.status === 'In Use').length || 0;
-  const pending = bookings?.filter(b => b.status === 'Pending').length || 0;
+  const pendingCount = bookings?.filter(b => b.status === 'Pending').length || 0;
   const maintenance = vehicles?.filter(v => v.status === 'Maintenance').length || 0;
 
   const stats = [
@@ -48,9 +61,9 @@ export function StatsCards() {
       delay: "duration-500"
     },
     { 
-      title: "Pending Requests", 
-      titleTh: "รออนุมัติ", 
-      value: pending, 
+      title: isAdmin ? "Total Pending" : "My Pending", 
+      titleTh: isAdmin ? "รายการรออนุมัติทั้งหมด" : "รายการจองของฉันที่รออนุมัติ", 
+      value: pendingCount, 
       icon: Clock, 
       color: "text-amber-500",
       bg: "bg-amber-500/10",

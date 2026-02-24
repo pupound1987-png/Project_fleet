@@ -1,4 +1,3 @@
-
 "use client";
 
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -10,19 +9,32 @@ import { AnomalyDetectionWidget } from "@/components/admin/anomaly-detection-wid
 import { Button } from "@/components/ui/button";
 import { PlusCircle, FileSpreadsheet, LayoutDashboard, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
-import { collection } from "firebase/firestore";
+import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from "@/firebase";
+import { collection, query, where, doc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
 export default function DashboardPage() {
   const db = useFirestore();
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
+
+  // Fetch user profile to determine role
+  const profileRef = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return doc(db, "users", user.uid);
+  }, [db, user]);
+  const { data: profile } = useDoc(profileRef);
+  const isAdmin = profile?.role === 'Admin';
   
   const bookingsRef = useMemoFirebase(() => {
     if (!db || !user) return null;
-    return collection(db, "bookings");
-  }, [db, user]);
+    // If Admin, see all. If Employee, only see own.
+    if (isAdmin) {
+      return collection(db, "bookings");
+    } else {
+      return query(collection(db, "bookings"), where("employeeId", "==", user.uid));
+    }
+  }, [db, user, isAdmin]);
   
   const { data: bookings, isLoading: isBookingsLoading } = useCollection(bookingsRef);
 
@@ -38,7 +50,6 @@ export default function DashboardPage() {
     try {
       const headers = ["Booking ID", "Vehicle", "Employee", "Department", "Destination", "Start", "End", "Status"];
       
-      // Helper to wrap fields in quotes and escape internal quotes
       const escapeCSV = (val: string) => {
         const stringVal = val ? String(val) : "";
         return `"${stringVal.replace(/"/g, '""')}"`;
@@ -57,7 +68,6 @@ export default function DashboardPage() {
 
       const csvContent = [headers.join(","), ...rows].join("\n");
       
-      // Add UTF-8 BOM for Excel to recognize Thai characters
       const BOM = "\uFEFF";
       const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
       
@@ -134,7 +144,7 @@ export default function DashboardPage() {
             </div>
             <div className="lg:col-span-3 space-y-6 animate-in fade-in slide-in-from-right-4 duration-700">
               <RecentBookings />
-              <AnomalyDetectionWidget />
+              {isAdmin && <AnomalyDetectionWidget />}
             </div>
           </div>
         </main>

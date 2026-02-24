@@ -4,141 +4,55 @@ service cloud.firestore {
 
     /**
      * FleetLink Company Vehicle Booking System - Security Rules
-     *
-     * Core Philosophy:
-     * This ruleset implements a robust, identity-based security model designed for a corporate environment.
-     * It prioritizes administrative control while allowing employees to manage their own profiles and bookings.
-     * Access is governed by Firebase Authentication UIDs and a dedicated administrative roles collection.
-     *
-     * Data Structure:
-     * - /users/{userId}: Private user profiles, keyed by Firebase UID.
-     * - /roles_admin/{adminId}: Administrative role markers. Presence of a UID here grants elevated privileges.
-     * - /vehicles/{vehicleId}: Publicly viewable (authenticated) fleet information.
-     * - /bookings/{bookingId}: Reservation records linked to users via denormalized 'employeeId'.
-     *
-     * Key Security Decisions:
-     * 1. DBAC (Database-Based Access Control): Administrative rights are verified by checking for document
-     *    existence in the 'roles_admin' collection.
-     * 2. Denormalization for Authorization: The 'employeeId' is stored directly on Booking documents to 
-     *    allow for efficient ownership checks without cross-document lookups.
-     * 3. Prototyping Flexibility: Rules strictly enforce 'who' can access data (Authorization) but remain 
-     *    agnostic about the specific fields or data types (Schema) to allow for rapid frontend iteration.
-     * 4. Safe Writes: All update and delete operations verify the document exists before proceeding.
      */
 
     // --- Helper Functions ---
 
-    /**
-     * @description Checks if the request is made by a signed-in user.
-     */
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /**
-     * @description Verifies if the authenticated user has an administrative role.
-     * This uses the structural segregation of the roles_admin collection.
-     */
     function isAdmin() {
       return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
     }
 
-    /**
-     * @description Checks if the provided ID matches the authenticated user's UID.
-     */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    /**
-     * @description Combines ownership and existence checks for destructive/modifying operations.
-     */
-    function isExistingOwner(userId) {
-      return resource != null && isOwner(userId);
-    }
-
-    /**
-     * @description Checks if the authenticated user is the owner of a booking document.
-     * Relies on the denormalized 'employeeId' field.
-     */
-    function isBookingOwner() {
-      return isSignedIn() && resource != null && resource.data.employeeId == request.auth.uid;
-    }
-
     // --- Collection Rules ---
 
-    /**
-     * @description Security rules for user profiles. Users manage their own data; Admins have oversight.
-     * @path /users/{userId}
-     * @allow get: (isOwner), update: (isOwner), create: (isOwner - matches UID)
-     * @deny delete: (non-Admin), read: (other users)
-     * @principle Enforces strict user-ownership for profiles and allows administrative access for HR/IT.
-     */
     match /users/{userId} {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
       allow create: if isOwner(userId);
-      allow update: if isExistingOwner(userId) || isAdmin();
+      allow update: if isOwner(userId) || isAdmin();
       allow delete: if isAdmin();
     }
 
-    /**
-     * @description High-security collection for administrative role management.
-     * @path /roles_admin/{adminId}
-     * @allow get: (isAdmin), list: (isAdmin), write: (isAdmin)
-     * @deny any: (non-Admin)
-     * @principle Restricts access to sensitive role assignments to existing administrators only.
-     */
     match /roles_admin/{adminId} {
       allow get, list: if isAdmin();
       allow create, update, delete: if isAdmin();
     }
 
-    /**
-     * @description Fleet inventory. All employees can view vehicles; only Admins manage the fleet.
-     * @path /vehicles/{vehicleId}
-     * @allow get: (isSignedIn), list: (isSignedIn), write: (isAdmin)
-     * @deny write: (non-Admin)
-     * @principle Permits broad read access for booking discovery while protecting inventory integrity.
-     */
     match /vehicles/{vehicleId} {
       allow get, list: if isSignedIn();
       allow create, update, delete: if isAdmin();
     }
 
-    /**
-     * @description Vehicle booking records.
-     * @path /bookings/{bookingId}
-     * @allow create: (isSignedIn & employeeId matches auth), get: (isOwner || isAdmin)
-     * @deny delete: (non-Admin), update: (if not Owner/Admin)
-     * @principle Uses denormalized ID for ownership validation and enforces relational integrity on create.
-     */
     match /bookings/{bookingId} {
-      allow get: if isBookingOwner() || isAdmin();
+      // Allow getting a single document if owner or admin
+      allow get: if isAdmin() || (isSignedIn() && resource.data.employeeId == request.auth.uid);
       
-      /**
-       * Note: 'list' is restricted to Admins by default here to prevent unauthorized data exposure.
-       * Employees should list their own bookings using a query filtered by 'employeeId'.
-       */
-      allow list: if isAdmin() || isSignedIn(); 
+      // Enforce filtering by employeeId for non-admins during list operations
+      allow list: if isAdmin() || (isSignedIn() && resource.data.employeeId == request.auth.uid);
 
       allow create: if isSignedIn() 
                     && request.resource.data.employeeId == request.auth.uid;
       
-      allow update: if isBookingOwner() || isAdmin();
+      allow update: if isAdmin() || (isSignedIn() && resource.data.employeeId == request.auth.uid);
       
       allow delete: if isAdmin();
     }
   }
 }
-
-/** 
- * ARCHITECT NOTES:
- * 1. Relational Integrity: On /bookings creation, we strictly enforce that the 'employeeId' 
- *    in the document matches the 'auth.uid'. This prevents users from booking on behalf of others.
- * 2. Performance: Admin checks are optimized using `exists()`. Since these rules are evaluated 
- *    frequently, this path is highly performant.
- * 3. Future-Proofing: While currently in Prototyping Mode, the logic is structured to easily 
- *    incorporate status-based write restrictions (e.g., only allowing updates if status is 'Pending')
- *    once the business logic stabilizes.
- */
