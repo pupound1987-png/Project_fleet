@@ -47,6 +47,26 @@
   }
 }
 
+@keyframes drive-vibration {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-1.5px); }
+  100% { transform: translateY(0); }
+}
+
+@keyframes road-line {
+  0% { transform: translateX(100%); opacity: 0; }
+  50% { opacity: 0.5; }
+  100% { transform: translateX(-200%); opacity: 0; }
+}
+
+.animate-drive-vibration {
+  animation: drive-vibration 0.3s ease-in-out infinite;
+}
+
+.animate-road-line {
+  animation: road-line 1.5s linear infinite;
+}
+
 .hover-card-effect {
   @apply transition-all duration-300 hover:shadow-xl hover:-translate-y-1;
 }

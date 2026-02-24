@@ -1,17 +1,48 @@
-
 "use client";
 
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Mail, Lock, Car, ArrowRight } from "lucide-react";
+import { Mail, Lock, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/firebase";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
+
+const AnimatedCarLogo = () => (
+  <div className="relative flex flex-col items-center mb-6">
+    <div className="relative p-6 bg-accent rounded-3xl shadow-2xl shadow-accent/30 overflow-hidden">
+      {/* Animated Road Lines */}
+      <div className="absolute bottom-2 left-0 w-full flex justify-around overflow-hidden h-[2px]">
+        <div className="w-4 h-full bg-white/40 animate-road-line"></div>
+        <div className="w-4 h-full bg-white/40 animate-road-line [animation-delay:0.5s]"></div>
+        <div className="w-4 h-full bg-white/40 animate-road-line [animation-delay:1s]"></div>
+      </div>
+      
+      {/* Car Body with Vibration */}
+      <div className="relative animate-drive-vibration">
+        <svg viewBox="0 0 100 50" className="w-16 h-10 text-white fill-current drop-shadow-md">
+          <path d="M10,35 Q10,25 20,20 L35,15 Q40,5 55,5 L75,5 Q85,10 90,20 L95,35 Z" />
+          <path d="M38,15 L52,10 L72,10 L70,18 L38,18 Z" fill="#1e293b" fillOpacity="0.3" />
+          <circle cx="90" cy="25" r="2" fill="#fef08a" />
+        </svg>
+
+        {/* Spinning Wheels */}
+        <div className="absolute -bottom-1 left-3 w-4 h-4 bg-slate-900 rounded-full border border-white/40 animate-spin">
+          <div className="w-full h-[1px] bg-white/60 absolute top-1/2 -translate-y-1/2"></div>
+          <div className="w-full h-[1px] bg-white/60 absolute top-1/2 -translate-y-1/2 rotate-90"></div>
+        </div>
+        <div className="absolute -bottom-1 right-3 w-4 h-4 bg-slate-900 rounded-full border border-white/40 animate-spin">
+          <div className="w-full h-[1px] bg-white/60 absolute top-1/2 -translate-y-1/2"></div>
+          <div className="w-full h-[1px] bg-white/60 absolute top-1/2 -translate-y-1/2 rotate-90"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -45,7 +76,6 @@ export default function LoginPage() {
 
   return (
     <div className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden">
-      {/* Background Image with Overlay */}
       <div className="absolute inset-0 z-0">
         <Image
           src="https://picsum.photos/seed/fleet4/1920/1080"
@@ -59,10 +89,8 @@ export default function LoginPage() {
       </div>
 
       <div className="relative z-10 w-full max-w-md animate-in fade-in zoom-in duration-500">
-        <div className="flex flex-col items-center mb-8">
-          <div className="bg-accent p-3 rounded-2xl shadow-xl shadow-accent/20 mb-4">
-            <Car className="w-10 h-10 text-white" />
-          </div>
+        <div className="flex flex-col items-center mb-6">
+          <AnimatedCarLogo />
           <h1 className="text-4xl font-black text-white tracking-tighter mb-1">FleetLink</h1>
           <p className="text-accent font-bold uppercase tracking-[0.3em] text-xs">TCI TREND GROUP</p>
         </div>
