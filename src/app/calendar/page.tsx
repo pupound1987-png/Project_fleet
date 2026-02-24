@@ -1,15 +1,13 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/sidebar";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { format, startOfWeek, addDays, isSameDay } from "date-fns";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
 import { collection } from "firebase/firestore";
 
 export default function CalendarPage() {
@@ -17,8 +15,17 @@ export default function CalendarPage() {
   const [viewDate, setViewDate] = useState(new Date());
 
   const db = useFirestore();
-  const vehiclesRef = useMemoFirebase(() => collection(db, "vehicles"), [db]);
-  const bookingsRef = useMemoFirebase(() => collection(db, "bookings"), [db]);
+  const { user } = useUser();
+  
+  const vehiclesRef = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return collection(db, "vehicles");
+  }, [db, user]);
+
+  const bookingsRef = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return collection(db, "bookings");
+  }, [db, user]);
 
   const { data: vehicles, isLoading: isVehiclesLoading } = useCollection(vehiclesRef);
   const { data: bookings, isLoading: isBookingsLoading } = useCollection(bookingsRef);
@@ -67,7 +74,7 @@ export default function CalendarPage() {
         <main className="p-4 sm:p-6 lg:p-8">
           <Card className="shadow-lg border-none overflow-hidden bg-white">
             <div className="overflow-x-auto">
-              {(isVehiclesLoading || isBookingsLoading) ? (
+              {(!user || isVehiclesLoading || isBookingsLoading) ? (
                 <div className="flex flex-col items-center justify-center py-20 gap-3">
                   <Loader2 className="w-8 h-8 animate-spin text-primary" />
                   <p className="text-sm text-muted-foreground">Loading Calendar Data...</p>

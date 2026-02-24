@@ -31,18 +31,18 @@ service cloud.firestore {
     }
 
     match /roles_admin/{adminId} {
-      allow get, list: if isAdmin();
-      allow create, update, delete: if isAdmin();
+      allow read: if isSignedIn(); // Allow all signed in users to check if someone is admin
+      allow write: if isAdmin();
     }
 
     match /vehicles/{vehicleId} {
-      allow get, list: if isSignedIn();
-      allow create, update, delete: if isAdmin();
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
     }
 
     match /bookings/{bookingId} {
-      // Allow getting and listing all bookings for the calendar and fleet visibility
-      allow get, list: if isSignedIn();
+      // Allow reading bookings for signed in users (required for calendar and general visibility)
+      allow read: if isSignedIn();
 
       allow create: if isSignedIn() 
                     && request.resource.data.employeeId == request.auth.uid;

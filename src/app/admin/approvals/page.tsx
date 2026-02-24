@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -8,16 +7,22 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
-import { ShieldCheck, Check, X, User } from "lucide-react";
+import { ShieldCheck, Check, X, User as UserIcon, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking } from "@/firebase";
+import { useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, useUser } from "@/firebase";
 import { collection, query, where, doc } from "firebase/firestore";
 
 export default function AdminApprovalsPage() {
   const { toast } = useToast();
   const [mounted, setMounted] = useState(false);
   const db = useFirestore();
-  const bookingsQuery = useMemoFirebase(() => query(collection(db, "bookings"), where("status", "==", "Pending")), [db]);
+  const { user } = useUser();
+
+  const bookingsQuery = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return query(collection(db, "bookings"), where("status", "==", "Pending"));
+  }, [db, user]);
+
   const { data: bookings, isLoading } = useCollection(bookingsQuery);
 
   useEffect(() => {
@@ -33,6 +38,8 @@ export default function AdminApprovalsPage() {
       description: `Booking has been ${action.toLowerCase()}.`,
     });
   };
+
+  if (!mounted) return null;
 
   return (
     <SidebarProvider>
@@ -51,7 +58,10 @@ export default function AdminApprovalsPage() {
 
           <div className="grid gap-6">
             {isLoading ? (
-              <div className="text-center py-12">Loading requests...</div>
+              <div className="flex flex-col items-center justify-center py-20 gap-3">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                <p className="text-sm text-muted-foreground">Loading requests...</p>
+              </div>
             ) : (!bookings || bookings.length === 0) ? (
               <div className="text-center py-12 text-muted-foreground">
                 No pending requests. (ไม่มีรายการที่รอการอนุมัติ)
@@ -64,7 +74,7 @@ export default function AdminApprovalsPage() {
                       <div className="space-y-1">
                         <CardTitle className="text-xl text-blue-900">{booking.vehicleName}</CardTitle>
                         <CardDescription className="flex items-center gap-2">
-                          <User className="w-3 h-3" /> {booking.employeeName} ({booking.department})
+                          <UserIcon className="w-3 h-3" /> {booking.employeeName} ({booking.department})
                         </CardDescription>
                       </div>
                       <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">Pending | รออนุมัติ</Badge>
@@ -79,7 +89,7 @@ export default function AdminApprovalsPage() {
                       <div>
                         <p className="font-semibold text-blue-900">Time | เวลา</p>
                         <p>
-                          {mounted && booking.startDateTime ? `${format(new Date(booking.startDateTime), 'dd MMM yyyy, HH:mm')} - ${format(new Date(booking.endDateTime), 'HH:mm')}` : '...'}
+                          {booking.startDateTime ? `${format(new Date(booking.startDateTime), 'dd MMM yyyy, HH:mm')} - ${format(new Date(booking.endDateTime), 'HH:mm')}` : '...'}
                         </p>
                       </div>
                       <div className="md:col-span-2">

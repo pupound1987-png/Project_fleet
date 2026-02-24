@@ -1,14 +1,14 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle2, Clock, AlertTriangle, Car as CarIcon } from "lucide-react";
+import { CheckCircle2, Clock, AlertTriangle, Car as CarIcon, Loader2 } from "lucide-react";
 import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc } from "@/firebase";
 import { collection, query, where, doc } from "firebase/firestore";
 import { cn } from "@/lib/utils";
 
 export function StatsCards() {
   const db = useFirestore();
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
 
   // Fetch user profile to determine role
   const profileRef = useMemoFirebase(() => {
@@ -33,8 +33,20 @@ export function StatsCards() {
     }
   }, [db, user, isAdmin]);
   
-  const { data: vehicles } = useCollection(vehiclesRef);
-  const { data: bookings } = useCollection(bookingsRef);
+  const { data: vehicles, isLoading: isVehiclesLoading } = useCollection(vehiclesRef);
+  const { data: bookings, isLoading: isBookingsLoading } = useCollection(bookingsRef);
+
+  if (isUserLoading || isVehiclesLoading || isBookingsLoading) {
+    return (
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        {[1, 2, 3, 4].map((i) => (
+          <Card key={i} className="h-32 flex items-center justify-center bg-white/50 border-none shadow-sm">
+            <Loader2 className="w-6 h-6 animate-spin text-primary/20" />
+          </Card>
+        ))}
+      </div>
+    );
+  }
 
   const totalVehicles = vehicles?.length || 0;
   const inUse = vehicles?.filter(v => v.status === 'In Use').length || 0;
