@@ -45,7 +45,7 @@ export const MOCK_VEHICLES: Vehicle[] = [
 ];
 
 export const MOCK_USERS: User[] = [
-  { email: 'admin@company.com', name: 'Somsak Admin', department: 'IT Operations', role: 'Admin' },
+  { email: 'admin@tcitrendgroup', name: 'admin', department: 'IT Operations', role: 'Admin' },
   { email: 'employee@company.com', name: 'Wichai Worker', department: 'Sales', role: 'Employee' },
 ];
 

@@ -105,11 +105,11 @@ export function AppSidebar() {
         <div className="flex items-center gap-3 px-2 py-3 bg-accent/30 rounded-lg">
           <Avatar className="h-9 w-9 border-2 border-white shadow-sm">
             <AvatarImage src="https://picsum.photos/seed/user1/40/40" />
-            <AvatarFallback>SA</AvatarFallback>
+            <AvatarFallback>AD</AvatarFallback>
           </Avatar>
           <div className="flex flex-col flex-1 min-w-0">
-            <span className="text-sm font-semibold truncate text-blue-900">Somsak Admin</span>
-            <span className="text-xs text-muted-foreground truncate">admin@company.com</span>
+            <span className="text-sm font-semibold truncate text-blue-900">admin</span>
+            <span className="text-xs text-muted-foreground truncate">admin@tcitrendgroup</span>
           </div>
           <button className="p-2 hover:bg-white rounded-md transition-colors text-muted-foreground hover:text-red-500">
             <LogOut className="w-4 h-4" />
