@@ -14,42 +14,42 @@ import Image from "next/image";
 
 const AnimatedCarLogo = () => (
   <div className="relative flex flex-col items-center mb-6">
-    <div className="relative p-4 bg-accent rounded-3xl shadow-2xl shadow-accent/40 overflow-hidden w-56 h-32 flex items-end justify-center border-b-4 border-accent-foreground/20">
+    <div className="relative p-4 bg-accent rounded-3xl shadow-2xl shadow-accent/40 overflow-hidden w-64 h-36 flex items-end justify-center border-b-4 border-accent-foreground/20">
       {/* Moving Road Lines (From Right to Left for forward motion) */}
-      <div className="absolute bottom-6 left-0 w-full h-1 overflow-hidden pointer-events-none">
+      <div className="absolute bottom-8 left-0 w-full h-1 overflow-hidden pointer-events-none">
         <div className="flex w-[200%] animate-[slide-left_0.8s_linear_infinite]">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="w-10 h-full bg-white/40 mr-12 rounded-full"></div>
+            <div key={i} className="w-12 h-full bg-white/40 mr-12 rounded-full"></div>
           ))}
         </div>
       </div>
       
       {/* Side Profile Jeep (Facing Right) */}
-      <div className="relative animate-drive-vibration z-10 w-40 mb-4">
-        <svg viewBox="0 0 140 80" className="w-40 h-auto text-white fill-current drop-shadow-xl">
-          {/* Main Body - More defined Jeep shape */}
+      <div className="relative animate-drive-vibration z-10 w-44 mb-6">
+        <svg viewBox="0 0 140 80" className="w-44 h-auto text-white fill-current drop-shadow-2xl">
+          {/* Main Body - Grounded Jeep Shape */}
           {/* Front Bumper & Grill Area */}
-          <path d="M120,55 L135,55 L135,45 L125,45 L125,40 L110,40" fill="#cbd5e1" />
+          <path d="M125,50 L140,50 L140,40 L130,40 L130,35 L110,35" fill="#cbd5e1" />
           {/* Main Chassis */}
-          <path d="M15,55 L125,55 L125,40 L100,40 L90,20 L30,20 L30,40 L15,40 Z" />
+          <path d="M15,50 L130,50 L130,35 L105,35 L95,15 L35,15 L35,35 L15,35 Z" />
           {/* Cabin/Windows */}
-          <path d="M35,24 L85,24 L94,40 L35,40 Z" fill="#1e293b" fillOpacity="0.6" />
-          {/* Spare Tire on the back (Left side) */}
-          <circle cx="15" cy="38" r="12" fill="#0f172a" />
-          <circle cx="15" cy="38" r="7" fill="#1e293b" />
+          <path d="M40,18 L90,18 L98,35 L40,35 Z" fill="#1e293b" fillOpacity="0.7" />
+          {/* Spare Tire on the back */}
+          <circle cx="12" cy="35" r="10" fill="#0f172a" />
+          <circle cx="12" cy="35" r="5" fill="#1e293b" />
           {/* Headlight */}
-          <circle cx="122" cy="45" r="3" fill="#fef08a" className="animate-pulse" />
+          <circle cx="128" cy="40" r="3" fill="#fef08a" className="animate-pulse" />
         </svg>
 
-        {/* Properly Spaced Wheels (At the edges of the chassis) */}
-        <div className="absolute -bottom-3 left-8 animate-spin duration-300">
-           <svg viewBox="0 0 24 24" className="w-8 h-8 text-[#0f172a]">
+        {/* Lowered Wheels for better balance */}
+        <div className="absolute -bottom-6 left-8 animate-spin duration-300">
+           <svg viewBox="0 0 24 24" className="w-9 h-9 text-[#0f172a]">
              <circle cx="12" cy="12" r="11" fill="currentColor" />
              <path d="M12,2 L12,22 M2,12 L22,12 M5,5 L19,19 M19,5 L5,19" stroke="white" strokeWidth="2" strokeOpacity="0.4" />
            </svg>
         </div>
-        <div className="absolute -bottom-3 right-4 animate-spin duration-300">
-           <svg viewBox="0 0 24 24" className="w-8 h-8 text-[#0f172a]">
+        <div className="absolute -bottom-6 right-6 animate-spin duration-300">
+           <svg viewBox="0 0 24 24" className="w-9 h-9 text-[#0f172a]">
              <circle cx="12" cy="12" r="11" fill="currentColor" />
              <path d="M12,2 L12,22 M2,12 L22,12 M5,5 L19,19 M19,5 L5,19" stroke="white" strokeWidth="2" strokeOpacity="0.4" />
            </svg>
