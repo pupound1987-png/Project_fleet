@@ -9,7 +9,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth, useFirestore } from "@/firebase";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
+import { doc } from "firebase/firestore";
+import { setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 
@@ -43,7 +44,7 @@ const AnimatedCarLogo = () => (
         <div className="absolute bottom-[-4px] right-6 animate-spin duration-300">
            <svg viewBox="0 0 24 24" className="w-7 h-7 text-[#0f172a]">
              <circle cx="12" cy="12" r="10" fill="currentColor" />
-             <path d="M12,4 L12,20 M4,12 Record20,12" stroke="white" strokeWidth="2" strokeOpacity="0.3" />
+             <path d="M12,4 L12,20 M4,12 L20,12" stroke="white" strokeWidth="2" strokeOpacity="0.3" />
            </svg>
         </div>
       </div>
@@ -75,6 +76,11 @@ export default function RegisterPage() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (password.length < 6) {
+      toast({ variant: "destructive", title: "Password too short", description: "Minimum 6 characters required." });
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -83,34 +89,35 @@ export default function RegisterPage() {
 
       await updateProfile(user, { displayName: name });
 
-      // Special logic for Admin role during demo/testing
       const role = email.toLowerCase() === 'admin@tcitrendgroup' ? 'Admin' : 'Employee';
 
-      await setDoc(doc(db, "users", user.uid), {
+      // Save User Profile (Non-blocking)
+      setDocumentNonBlocking(doc(db, "users", user.uid), {
         email: user.email,
         name: name,
         department: "General",
         role: role,
         createdAt: new Date().toISOString()
-      });
+      }, { merge: true });
 
+      // Save Admin Role if applicable (Non-blocking)
       if (role === 'Admin') {
-        await setDoc(doc(db, "roles_admin", user.uid), {
+        setDocumentNonBlocking(doc(db, "roles_admin", user.uid), {
           active: true,
           email: user.email
-        });
+        }, { merge: true });
       }
 
       toast({
-        title: "Success | สำเร็จ",
-        description: `Your account has been created as ${role}. (สร้างบัญชีผู้ใช้ในฐานะ ${role} เรียบร้อยแล้ว)`,
+        title: "Account Created | สร้างบัญชีสำเร็จ",
+        description: `Welcome, ${name}! Your account as ${role} is ready.`,
       });
       
       router.push("/");
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Registration Failed | ลงทะเบียนไม่สำเร็จ",
+        title: "Registration Error | เกิดข้อผิดพลาด",
         description: error.message,
       });
     } finally {
@@ -173,7 +180,7 @@ export default function RegisterPage() {
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
                 <Input 
                   type="password"
-                  placeholder="Password | รหัสผ่าน" 
+                  placeholder="Password (min 6 characters)" 
                   className="pl-12 py-6 bg-white/10 border-white/10 text-white placeholder:text-slate-500 rounded-xl focus:ring-accent"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
