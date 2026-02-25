@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "User": {
@@ -60,6 +61,10 @@
         "status": {
           "type": "string",
           "description": "The current operational status of the vehicle (e.g., Available, Maintenance). This represents the vehicle's general state, not booking-specific availability."
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "The URL or Base64 data of the vehicle image."
         },
         "remark": {
           "type": "string",
