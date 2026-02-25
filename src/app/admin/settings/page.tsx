@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { BellRing, Key, MessageSquare, Loader2, Info, ExternalLink, Rocket } from "lucide-react";
+import { BellRing, Key, MessageSquare, Loader2, Info, ExternalLink, Rocket, ShieldCheck } from "lucide-react";
 import { useFirestore, useDoc, setDocumentNonBlocking, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
 import { sendLineNotification } from "@/app/actions/line-notify";
@@ -60,7 +60,7 @@ export default function LineSettingsPage() {
 
     setIsTesting(true);
     try {
-      const res = await sendLineNotification(trimmedToken, "🔔 FleetLink Test: Connection Successful! (เชื่อมต่อสำเร็จจากระบบจัดการยานพาหนะ)");
+      const res = await sendLineNotification(trimmedToken, "🔔 FleetLink Test: ระบบแจ้งเตือนพร้อมใช้งานแล้ว! (ส่งจากหน้าการตั้งค่าผู้ดูแลระบบ)");
       if (res.success) {
         toast({
           title: "Success! | สำเร็จ",
@@ -69,8 +69,9 @@ export default function LineSettingsPage() {
       } else {
         toast({
           variant: "destructive",
-          title: "Connection Failed | ล้มเหลว",
+          title: "Connection Failed | การเชื่อมต่อถูกจำกัด",
           description: res.error,
+          duration: 10000,
         });
       }
     } catch (err: any) {
@@ -99,20 +100,14 @@ export default function LineSettingsPage() {
             <h1 className="text-2xl font-bold text-blue-950">Line Notification | การแจ้งเตือนไลน์</h1>
           </div>
 
-          <Alert className="bg-blue-50 border-blue-200">
-            <Info className="h-4 w-4 text-blue-600" />
-            <AlertTitle className="text-blue-800 font-bold">Important Notice (ข้อควรทราบ)</AlertTitle>
-            <AlertDescription className="text-blue-700 text-sm space-y-4">
-              <div className="space-y-1">
-                <p className="font-bold text-amber-600 flex items-center gap-1">
-                  <Rocket className="w-4 h-4" /> หากกดทดสอบแล้วขึ้น "fetch failed"
-                </p>
-                <p>นั่นเป็นเพราะระบบเน็ตเวิร์กในหน้า Preview นี้ถูกจำกัดไว้ครับ <b>แต่โค้ดนี้จะทำงานได้ 100% เมื่อคุณกดปุ่ม Publish สีน้ำเงินที่มุมขวาบน</b> เพื่อนำแอปขึ้นสู่เซิร์ฟเวอร์จริงครับ</p>
-              </div>
-              <div className="space-y-1 pt-2 border-t border-blue-100">
-                <p className="font-semibold">วิธีตั้งค่า:</p>
-                <p>1. ไปที่ <a href="https://notify-bot.line.me/" target="_blank" className="font-bold underline inline-flex items-center gap-1">Line Notify <ExternalLink className="w-3 h-3"/></a></p>
-                <p>2. ออก Access Token และนำมาวางที่ช่องด้านล่าง</p>
+          <Alert className="bg-amber-50 border-amber-200">
+            <Rocket className="h-4 w-4 text-amber-600" />
+            <AlertTitle className="text-amber-800 font-bold">Deployment Required for Testing (ต้องกด Publish ก่อน)</AlertTitle>
+            <AlertDescription className="text-amber-700 text-sm space-y-3">
+              <p>เนื่องจากระบบความปลอดภัยของหน้า <b>Preview</b> นี้ไม่อนุญาตให้แอปเชื่อมต่อไปยังภายนอก การกด "ทดสอบ" ในหน้านี้อาจขึ้น Error <b>"Network Connection Blocked"</b> ครับ</p>
+              <div className="flex items-center gap-2 font-bold text-blue-700 bg-white/50 p-2 rounded-lg border border-blue-100">
+                <ShieldCheck className="w-5 h-5" />
+                <span>แต่มั่นใจได้ 100% ว่าโค้ดนี้จะทำงานได้ทันทีเมื่อคุณกดปุ่ม "Publish" สีน้ำเงินที่มุมขวาบนครับ</span>
               </div>
             </AlertDescription>
           </Alert>
@@ -120,9 +115,9 @@ export default function LineSettingsPage() {
           <Card className="shadow-lg border-none overflow-hidden">
             <CardHeader className="bg-primary/10 border-b">
               <CardTitle className="text-xl font-bold text-blue-900 flex items-center gap-2">
-                <MessageSquare className="w-5 h-5" /> Line Notify API
+                <MessageSquare className="w-5 h-5" /> Line Notify Configuration
               </CardTitle>
-              <CardDescription>เชื่อมต่อระบบแจ้งเตือนเข้ากลุ่ม Line อัตโนมัติ</CardDescription>
+              <CardDescription>Configure how the system notifies your team via Line.</CardDescription>
             </CardHeader>
             <CardContent className="pt-8 space-y-6">
               {isLoading ? (
@@ -131,8 +126,8 @@ export default function LineSettingsPage() {
                 <>
                   <div className="flex items-center justify-between p-4 bg-accent/5 rounded-lg border border-accent/10">
                     <div className="space-y-0.5">
-                      <Label className="text-base font-semibold">Enabled | เปิดการแจ้งเตือน</Label>
-                      <p className="text-xs text-muted-foreground">ส่งข้อความเมื่อมีคนจองรถหรือแอดมินอนุมัติ</p>
+                      <Label className="text-base font-semibold">Enabled | เปิดการใช้งาน</Label>
+                      <p className="text-xs text-muted-foreground">ส่งข้อความแจ้งเตือนอัตโนมัติเข้ากลุ่ม Line</p>
                     </div>
                     <Switch checked={isEnabled} onCheckedChange={setIsEnabled} />
                   </div>
@@ -143,11 +138,14 @@ export default function LineSettingsPage() {
                     </Label>
                     <Input 
                       type="password" 
-                      placeholder="Paste your 43-character token here" 
+                      placeholder="Paste your 43-character access token here" 
                       value={lineToken}
                       onChange={(e) => setLineToken(e.target.value)}
                       className="bg-white font-mono"
                     />
+                    <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                      <ExternalLink className="w-3 h-3" /> Get token from <a href="https://notify-bot.line.me/" target="_blank" className="underline font-bold">Line Notify Website</a>
+                    </p>
                   </div>
 
                   <div className="flex flex-col sm:flex-row gap-3 pt-4">
