@@ -9,10 +9,11 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { BellRing, ShieldCheck, Key, MessageSquare, Loader2 } from "lucide-react";
+import { BellRing, Key, MessageSquare, Loader2, Info } from "lucide-react";
 import { useFirestore, useDoc, setDocumentNonBlocking, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
 import { sendLineNotification } from "@/app/actions/line-notify";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 export default function LineSettingsPage() {
   const { toast } = useToast();
@@ -44,8 +45,8 @@ export default function LineSettingsPage() {
     setTimeout(() => {
       setIsSaving(false);
       toast({
-        title: "Settings Saved | บันทึกการตั้งค่าแล้ว",
-        description: "Line notification configurations have been updated.",
+        title: "Settings Saved | บันทึกแล้ว",
+        description: "Line config has been updated in database.",
       });
     }, 500);
   };
@@ -59,24 +60,24 @@ export default function LineSettingsPage() {
 
     setIsTesting(true);
     try {
-      const res = await sendLineNotification(trimmedToken, "🔔 Test notification from FleetLink system. (ข้อความทดสอบจากระบบ)");
+      const res = await sendLineNotification(trimmedToken, "🔔 FleetLink Connection Test: Success! (เชื่อมต่อสำเร็จ)");
       if (res.success) {
         toast({
-          title: "Test Sent | ส่งข้อความทดสอบแล้ว",
-          description: "Check your Line group for the test notification.",
+          title: "Test Sent | ส่งสำเร็จ",
+          description: "Notification reached your Line group.",
         });
       } else {
         toast({
           variant: "destructive",
-          title: "Test Failed | ส่งข้อความไม่สำเร็จ",
-          description: res.error || "Please check your token and network connection.",
+          title: "Test Failed | ส่งไม่สำเร็จ",
+          description: res.error,
         });
       }
     } catch (err: any) {
       toast({
         variant: "destructive",
         title: "Unexpected Error",
-        description: err.message || "An unexpected error occurred during testing.",
+        description: err.message,
       });
     } finally {
       setIsTesting(false);
@@ -89,75 +90,68 @@ export default function LineSettingsPage() {
       <SidebarInset className="bg-background">
         <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-white/80 backdrop-blur-md px-4 sm:px-6">
           <SidebarTrigger />
-          <h2 className="text-lg font-semibold text-blue-900">Notification Settings | ตั้งค่าการแจ้งเตือน</h2>
+          <h2 className="text-lg font-semibold text-blue-900">Line Settings | ตั้งค่าแจ้งเตือน</h2>
         </header>
 
         <main className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
           <div className="flex items-center gap-2 mb-2">
             <BellRing className="w-6 h-6 text-primary" />
-            <h1 className="text-2xl font-bold text-blue-950">Line Notification Config | ตั้งค่าแจ้งเตือนผ่านไลน์</h1>
+            <h1 className="text-2xl font-bold text-blue-950">Line Notification | แจ้งเตือนผ่านไลน์</h1>
           </div>
 
-          <Card className="shadow-lg border-none">
-            <CardHeader className="bg-primary/10 rounded-t-lg">
+          <Alert className="bg-blue-50 border-blue-200">
+            <Info className="h-4 w-4 text-blue-600" />
+            <AlertTitle className="text-blue-800 font-bold">Network Limitation Tip</AlertTitle>
+            <AlertDescription className="text-blue-700 text-xs">
+              ในสภาพแวดล้อม Cloud Workstation (Studio) นี้ การส่งข้อความออกภายนอกอาจถูกบล็อกโดย Network ทำให้เกิด "fetch failed" ได้ แต่เมื่อนำแอปนี้ไป **Publish (Deploy)** บน Firebase App Hosting ระบบจะทำงานได้ตามปกติครับ
+            </AlertDescription>
+          </Alert>
+
+          <Card className="shadow-lg border-none overflow-hidden">
+            <CardHeader className="bg-primary/10 border-b">
               <CardTitle className="text-xl font-bold text-blue-900 flex items-center gap-2">
-                <MessageSquare className="w-5 h-5" /> Line Notify
+                <MessageSquare className="w-5 h-5" /> Line Notify API
               </CardTitle>
-              <CardDescription>Configure credentials to receive real-time updates on Line.</CardDescription>
+              <CardDescription>เชื่อมต่อระบบแจ้งเตือนการจองรถเข้ากลุ่มไลน์</CardDescription>
             </CardHeader>
             <CardContent className="pt-8 space-y-6">
               {isLoading ? (
                 <div className="flex justify-center py-10"><Loader2 className="animate-spin text-primary" /></div>
               ) : (
                 <>
-                  <div className="flex items-center justify-between p-4 bg-accent/10 rounded-lg">
+                  <div className="flex items-center justify-between p-4 bg-accent/5 rounded-lg border border-accent/10">
                     <div className="space-y-0.5">
-                      <Label className="text-base font-semibold">Enable Notifications | เปิดใช้งานการแจ้งเตือน</Label>
-                      <p className="text-sm text-muted-foreground">Send booking updates to Line group.</p>
+                      <Label className="text-base font-semibold">Enable System | เปิดใช้งานระบบ</Label>
+                      <p className="text-xs text-muted-foreground">ส่งการแจ้งเตือนเมื่อมีการจองหรืออนุมัติ</p>
                     </div>
                     <Switch checked={isEnabled} onCheckedChange={setIsEnabled} />
                   </div>
 
-                  <div className="grid gap-4">
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2">
-                        <Key className="w-4 h-4 text-primary" /> Line Notify Token | ไลน์โทเคน
-                      </Label>
-                      <Input 
-                        type="password" 
-                        placeholder="Enter your Line Token" 
-                        value={lineToken}
-                        onChange={(e) => setLineToken(e.target.value)}
-                        className="bg-white"
-                      />
-                      <p className="text-[10px] text-muted-foreground italic">* Token required for sending messages to groups.</p>
-                    </div>
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <Key className="w-4 h-4 text-primary" /> Line Notify Token
+                    </Label>
+                    <Input 
+                      type="password" 
+                      placeholder="Paste your token here" 
+                      value={lineToken}
+                      onChange={(e) => setLineToken(e.target.value)}
+                      className="bg-white"
+                    />
                   </div>
 
-                  <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-blue-50">
+                  <div className="flex flex-col sm:flex-row gap-3 pt-4">
                     <Button variant="outline" className="flex-1" onClick={testConnection} disabled={isTesting}>
                       {isTesting ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : null}
-                      Test Connection | ทดสอบการเชื่อมต่อ
+                      Test Connection | ทดสอบ
                     </Button>
                     <Button className="flex-1 bg-primary text-blue-900 font-bold hover:bg-primary/90" onClick={handleSave} disabled={isSaving}>
                       {isSaving ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : null}
-                      Save Settings | บันทึกการตั้งค่า
+                      Save Config | บันทึกค่า
                     </Button>
                   </div>
                 </>
               )}
-            </CardContent>
-          </Card>
-
-          <Card className="bg-blue-50/50 border-none">
-            <CardContent className="pt-6">
-              <h3 className="font-bold text-blue-900 mb-2">How to get Line Token? | วิธีรับ Line Token</h3>
-              <ul className="text-sm space-y-1 text-muted-foreground list-disc pl-5">
-                <li>Go to <a href="https://notify-bot.line.me/" target="_blank" className="text-blue-600 underline">Line Notify</a></li>
-                <li>Login and click on "My Page"</li>
-                <li>Generate an access token for your specific group</li>
-                <li>Copy and paste the token above</li>
-              </ul>
             </CardContent>
           </Card>
         </main>
