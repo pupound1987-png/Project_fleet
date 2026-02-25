@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { BellRing, Key, MessageSquare, Loader2, Info, AlertTriangle } from "lucide-react";
+import { BellRing, Key, MessageSquare, Loader2, Info, AlertTriangle, ExternalLink } from "lucide-react";
 import { useFirestore, useDoc, setDocumentNonBlocking, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
 import { sendLineNotification } from "@/app/actions/line-notify";
@@ -60,7 +60,7 @@ export default function LineSettingsPage() {
 
     setIsTesting(true);
     try {
-      const res = await sendLineNotification(trimmedToken, "🔔 FleetLink Test: Connection Successful! (เชื่อมต่อสำเร็จ)");
+      const res = await sendLineNotification(trimmedToken, "🔔 FleetLink Test: Connection Successful! (เชื่อมต่อสำเร็จจากระบบจัดการยานพาหนะ)");
       if (res.success) {
         toast({
           title: "Success! | สำเร็จ",
@@ -90,7 +90,7 @@ export default function LineSettingsPage() {
       <SidebarInset className="bg-background">
         <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 border-b bg-white/80 backdrop-blur-md px-4 sm:px-6">
           <SidebarTrigger />
-          <h2 className="text-lg font-semibold text-blue-900">Line Notification Settings</h2>
+          <h2 className="text-lg font-semibold text-blue-900">Notification Settings</h2>
         </header>
 
         <main className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
@@ -99,12 +99,13 @@ export default function LineSettingsPage() {
             <h1 className="text-2xl font-bold text-blue-950">Line Notification | การแจ้งเตือนไลน์</h1>
           </div>
 
-          <Alert className="bg-amber-50 border-amber-200">
-            <AlertTriangle className="h-4 w-4 text-amber-600" />
-            <AlertTitle className="text-amber-800 font-bold">Development Notice (ข้อควรทราบ)</AlertTitle>
-            <AlertDescription className="text-amber-700 text-xs">
-              ในสภาพแวดล้อม Cloud Studio นี้ การส่งข้อมูลออกไปยัง Line API อาจถูกบล็อกโดยระบบรักษาความปลอดภัยของเน็ตเวิร์ก (ทำให้เกิด fetch failed) 
-              **แต่ไม่ต้องกังวล: โค้ดนี้จะทำงานได้ทันที 100% เมื่อคุณทำการ Publish (Deploy) แอปขึ้นใช้งานจริงครับ**
+          <Alert className="bg-blue-50 border-blue-200">
+            <Info className="h-4 w-4 text-blue-600" />
+            <AlertTitle className="text-blue-800 font-bold">How to use (วิธีใช้งาน)</AlertTitle>
+            <AlertDescription className="text-blue-700 text-sm space-y-2">
+              <p>1. ไปที่ <a href="https://notify-bot.line.me/" target="_blank" className="font-bold underline inline-flex items-center gap-1">Line Notify <ExternalLink className="w-3 h-3"/></a> และเข้าสู่ระบบ</p>
+              <p>2. ออก Access Token สำหรับกลุ่มที่คุณต้องการ และนำมาวางที่ช่องด้านล่าง</p>
+              <p>3. **สำคัญ:** เมื่อกดปุ่มทดสอบแล้วขึ้น "fetch failed" ในหน้านี้ ไม่ต้องตกใจครับ เป็นเพราะ Network ของระบบแก้ไขบล็อกไว้ แต่โค้ดนี้จะทำงานได้ 100% เมื่อคุณกด Publish ใช้งานจริงครับ</p>
             </AlertDescription>
           </Alert>
 
@@ -139,9 +140,6 @@ export default function LineSettingsPage() {
                       onChange={(e) => setLineToken(e.target.value)}
                       className="bg-white font-mono"
                     />
-                    <p className="text-[10px] text-muted-foreground px-1">
-                      Get your token from <a href="https://notify-bot.line.me/" target="_blank" className="text-primary underline">Line Notify Official Site</a>
-                    </p>
                   </div>
 
                   <div className="flex flex-col sm:flex-row gap-3 pt-4">
