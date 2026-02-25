@@ -24,6 +24,7 @@ export default function LineSettingsPage() {
   const [lineToken, setLineToken] = useState("");
   const [isEnabled, setIsEnabled] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isTesting, setIsTesting] = useState(false);
 
   useEffect(() => {
     if (config) {
@@ -35,7 +36,7 @@ export default function LineSettingsPage() {
   const handleSave = () => {
     setIsSaving(true);
     setDocumentNonBlocking(configRef, {
-      token: lineToken,
+      token: lineToken.trim(),
       enabled: isEnabled,
       updatedAt: new Date().toISOString()
     }, { merge: true });
@@ -44,7 +45,7 @@ export default function LineSettingsPage() {
       setIsSaving(false);
       toast({
         title: "Settings Saved | บันทึกการตั้งค่าแล้ว",
-        description: "Line notification configurations have been updated. (อัปเดตการตั้งค่าแจ้งเตือนผ่าน Line เรียบร้อยแล้ว)",
+        description: "Line notification configurations have been updated.",
       });
     }, 500);
   };
@@ -55,18 +56,29 @@ export default function LineSettingsPage() {
       return;
     }
 
-    const res = await sendLineNotification(lineToken, "🔔 Test notification from FleetLink system.");
-    if (res.success) {
-      toast({
-        title: "Test Sent | ส่งข้อความทดสอบแล้ว",
-        description: "Check your Line group for the test notification. (กรุณาตรวจสอบข้อความทดสอบในกลุ่ม Line)",
-      });
-    } else {
+    setIsTesting(true);
+    try {
+      const res = await sendLineNotification(lineToken.trim(), "🔔 Test notification from FleetLink system. (ข้อความทดสอบจากระบบ)");
+      if (res.success) {
+        toast({
+          title: "Test Sent | ส่งข้อความทดสอบแล้ว",
+          description: "Check your Line group for the test notification.",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Test Failed | ส่งข้อความไม่สำเร็จ",
+          description: res.error || "Please check your token.",
+        });
+      }
+    } catch (err: any) {
       toast({
         variant: "destructive",
-        title: "Test Failed | ส่งข้อความไม่สำเร็จ",
-        description: res.error || "Please check your token.",
+        title: "Connection Error",
+        description: err.message || "An unexpected error occurred.",
       });
+    } finally {
+      setIsTesting(false);
     }
   };
 
@@ -90,7 +102,7 @@ export default function LineSettingsPage() {
               <CardTitle className="text-xl font-bold text-blue-900 flex items-center gap-2">
                 <MessageSquare className="w-5 h-5" /> Line Notify
               </CardTitle>
-              <CardDescription>Configure credentials to receive real-time updates on Line. (ตั้งค่าข้อมูลเพื่อรับแจ้งเตือนแบบเรียลไทม์)</CardDescription>
+              <CardDescription>Configure credentials to receive real-time updates on Line.</CardDescription>
             </CardHeader>
             <CardContent className="pt-8 space-y-6">
               {isLoading ? (
@@ -100,7 +112,7 @@ export default function LineSettingsPage() {
                   <div className="flex items-center justify-between p-4 bg-accent/10 rounded-lg">
                     <div className="space-y-0.5">
                       <Label className="text-base font-semibold">Enable Notifications | เปิดใช้งานการแจ้งเตือน</Label>
-                      <p className="text-sm text-muted-foreground">Send booking updates to Line group. (ส่งข้อมูลการจองไปยังกลุ่มไลน์)</p>
+                      <p className="text-sm text-muted-foreground">Send booking updates to Line group.</p>
                     </div>
                     <Switch checked={isEnabled} onCheckedChange={setIsEnabled} />
                   </div>
@@ -117,12 +129,13 @@ export default function LineSettingsPage() {
                         onChange={(e) => setLineToken(e.target.value)}
                         className="bg-white"
                       />
-                      <p className="text-[10px] text-muted-foreground italic">* Token required for sending messages to groups. (จำเป็นต้องใช้ Token ในการส่งข้อความเข้ากลุ่ม)</p>
+                      <p className="text-[10px] text-muted-foreground italic">* Token required for sending messages to groups.</p>
                     </div>
                   </div>
 
                   <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-blue-50">
-                    <Button variant="outline" className="flex-1" onClick={testConnection}>
+                    <Button variant="outline" className="flex-1" onClick={testConnection} disabled={isTesting}>
+                      {isTesting ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : null}
                       Test Connection | ทดสอบการเชื่อมต่อ
                     </Button>
                     <Button className="flex-1 bg-primary text-blue-900 font-bold hover:bg-primary/90" onClick={handleSave} disabled={isSaving}>
