@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { User, Mail, Lock, ArrowLeft, Info } from "lucide-react";
+import { User, Mail, Lock, ArrowLeft, Info, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth, useFirestore } from "@/firebase";
@@ -89,7 +89,7 @@ export default function RegisterPage() {
 
       await updateProfile(user, { displayName: name });
 
-      const role = email.toLowerCase() === 'admin@tcitrendgroup' ? 'Admin' : 'Employee';
+      const role = email.toLowerCase() === 'admin@tcitrendgroup.com' ? 'Admin' : 'Employee';
 
       // Save User Profile (Non-blocking)
       setDocumentNonBlocking(doc(db, "users", user.uid), {
@@ -117,7 +117,7 @@ export default function RegisterPage() {
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Registration Error | เกิดข้อผิดพลาด",
+        title: "Registration Error | บัญชีผิดพลาด",
         description: error.message,
       });
     } finally {
@@ -190,9 +190,9 @@ export default function RegisterPage() {
               
               <div className="bg-blue-900/40 p-3 rounded-xl border border-blue-500/30 flex items-start gap-3">
                 <Info className="w-5 h-5 text-accent shrink-0 mt-0.5" />
-                <p className="text-[10px] text-slate-300 leading-relaxed">
-                  <span className="text-accent font-bold">Admin Tip:</span> Register with <span className="text-white underline font-mono">admin@tcitrendgroup</span> to get administrator privileges.
-                </p>
+                <div className="text-[10px] text-slate-300 leading-relaxed">
+                  <span className="text-accent font-bold">Admin Tip:</span> Register with <span className="text-white underline font-mono">admin@tcitrendgroup.com</span> to get administrator privileges.
+                </div>
               </div>
               
               <Button 
@@ -200,7 +200,7 @@ export default function RegisterPage() {
                 className="w-full py-7 bg-accent hover:bg-accent/90 text-white text-lg font-bold rounded-xl mt-4 shadow-lg shadow-accent/20 transition-all active:scale-[0.98]"
                 disabled={loading}
               >
-                {loading ? "Creating account..." : "Sign Up | สมัครสมาชิก"}
+                {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Sign Up | สมัครสมาชิก"}
               </Button>
             </form>
             

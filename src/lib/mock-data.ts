@@ -1,4 +1,3 @@
-
 export type VehicleType = 'Van' | 'Pickup' | 'Sedan';
 export type VehicleStatus = 'Available' | 'Maintenance' | 'Booked' | 'In Use';
 export type BookingStatus = 'Pending' | 'Approved' | 'Rejected' | 'Cancelled' | 'Completed';
@@ -45,7 +44,7 @@ export const MOCK_VEHICLES: Vehicle[] = [
 ];
 
 export const MOCK_USERS: User[] = [
-  { email: 'admin@tcitrendgroup', name: 'admin', department: 'IT Operations', role: 'Admin' },
+  { email: 'admin@tcitrendgroup.com', name: 'admin', department: 'IT Operations', role: 'Admin' },
   { email: 'employee@company.com', name: 'Wichai Worker', department: 'Sales', role: 'Employee' },
 ];
 
