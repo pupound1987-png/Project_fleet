@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar as CalendarIcon, MapPin, ClipboardList, Phone, Clock, Loader2 } from "lucide-react";
+import { Calendar as CalendarIcon, MapPin, ClipboardList, Phone, Clock, Loader2, MessageCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, useUser, useDoc } from "@/firebase";
 import { collection, doc, getDoc } from "firebase/firestore";
@@ -73,34 +73,35 @@ export default function BookingsPage() {
 
     addDocumentNonBlocking(bookingsRef, bookingData);
 
-    // Trigger Line Notification
+    // Trigger Line Notification Logic
     try {
       const configSnap = await getDoc(doc(db, "settings", "line-config"));
       const config = configSnap.data();
       
-      if (config?.enabled && config?.token) {
-        const message = `
-🚗 New Booking Request!
-------------------------
-By: ${bookingData.employeeName}
-Vehicle: ${bookingData.vehicleName}
-Destination: ${bookingData.destination}
-Time: ${format(new Date(bookingData.startDateTime), 'dd MMM, HH:mm')} - ${format(new Date(bookingData.endDateTime), 'HH:mm')}
-Purpose: ${bookingData.purpose}
-------------------------
-Status: Pending (Waiting for Approval)
-        `;
-        await sendLineNotification(config.token, message);
+      const message = `🚗 New Booking Request!\nBy: ${bookingData.employeeName}\nVehicle: ${bookingData.vehicleName}\nDestination: ${bookingData.destination}\nPurpose: ${bookingData.purpose}`;
+
+      if (config?.enabled) {
+        if (config.isSimulated) {
+          // Simulation feedback
+          toast({
+            title: "Simulation: Line Notified! | จำลองการส่งไลน์",
+            description: "Message Preview: " + message,
+            duration: 5000,
+          });
+        } else if (config.token) {
+          // Actual attempt (will work after publish)
+          await sendLineNotification(config.token, message);
+        }
       }
     } catch (err) {
-      console.error("Failed to send line notification", err);
+      console.error("Failed notification logic", err);
     }
 
     setTimeout(() => {
       setLoading(false);
       toast({
         title: "Booking Requested | ส่งคำขอจองแล้ว",
-        description: "Your vehicle request has been sent and Line notification triggered.",
+        description: "Your request is pending approval.",
       });
       router.push("/");
     }, 800);
@@ -119,7 +120,7 @@ Status: Pending (Waiting for Approval)
           <Card className="shadow-lg border-none">
             <CardHeader className="bg-primary/10 rounded-t-lg pb-6">
               <CardTitle className="text-2xl font-bold text-blue-900">Vehicle Request Form | แบบฟอร์มขอใช้รถ</CardTitle>
-              <CardDescription>Please provide accurate details for your journey. (กรุณากรอกข้อมูลการเดินทางให้ครบถ้วน)</CardDescription>
+              <CardDescription>กรุณากรอกข้อมูลการเดินทางให้ครบถ้วน</CardDescription>
             </CardHeader>
             <CardContent className="pt-8">
               <form onSubmit={handleSubmit} className="grid gap-6">
@@ -130,12 +131,12 @@ Status: Pending (Waiting for Approval)
                     </Label>
                     <Select required onValueChange={(val) => setFormData({...formData, vehicleId: val})}>
                       <SelectTrigger className="bg-white">
-                        <SelectValue placeholder="Choose an available car | เลือกรถที่ว่าง" />
+                        <SelectValue placeholder="Choose an available car" />
                       </SelectTrigger>
                       <SelectContent>
                         {vehicles?.filter(v => v.status === 'Available').map(v => (
                           <SelectItem key={v.id} value={v.id}>
-                            {v.vehicleName} ({v.licensePlate}) - {v.capacity} Seats
+                            {v.vehicleName} ({v.licensePlate})
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -143,7 +144,7 @@ Status: Pending (Waiting for Approval)
                   </div>
                   <div className="space-y-2">
                     <Label className="text-sm font-semibold flex items-center gap-2">
-                      <Phone className="w-3 h-3" /> Contact Phone | เบอร์โทรศัพท์ติดต่อ
+                      <Phone className="w-3 h-3" /> Contact Phone | เบอร์โทรศัพท์
                     </Label>
                     <Input 
                       placeholder="08x-xxx-xxxx" 
@@ -158,7 +159,7 @@ Status: Pending (Waiting for Approval)
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label className="text-sm font-semibold flex items-center gap-2">
-                      <Clock className="w-3 h-3" /> Start Date & Time | วันที่และเวลาเริ่มต้น
+                      <Clock className="w-3 h-3" /> Start Date & Time
                     </Label>
                     <Input 
                       type="datetime-local" 
@@ -169,7 +170,7 @@ Status: Pending (Waiting for Approval)
                   </div>
                   <div className="space-y-2">
                     <Label className="text-sm font-semibold flex items-center gap-2">
-                      <Clock className="w-3 h-3" /> End Date & Time | วันที่และเวลาสิ้นสุด
+                      <Clock className="w-3 h-3" /> End Date & Time
                     </Label>
                     <Input 
                       type="datetime-local" 
@@ -185,7 +186,7 @@ Status: Pending (Waiting for Approval)
                     <MapPin className="w-3 h-3" /> Destination | สถานที่จุดหมาย
                   </Label>
                   <Input 
-                    placeholder="Where are you going? | คุณกำลังจะไปที่ไหน?" 
+                    placeholder="Where are you going?" 
                     required 
                     className="bg-white"
                     onChange={(e) => setFormData({...formData, destination: e.target.value})}
@@ -194,10 +195,10 @@ Status: Pending (Waiting for Approval)
 
                 <div className="space-y-2">
                   <Label className="text-sm font-semibold flex items-center gap-2">
-                    <ClipboardList className="w-3 h-3" /> Purpose of Trip | วัตถุประสงค์การเดินทาง
+                    <ClipboardList className="w-3 h-3" /> Purpose | วัตถุประสงค์
                   </Label>
                   <Textarea 
-                    placeholder="Describe the reason for this booking | ระบุเหตุผลในการจองรถ" 
+                    placeholder="Describe the reason for this booking" 
                     required 
                     className="bg-white min-h-[100px]"
                     onChange={(e) => setFormData({...formData, purpose: e.target.value})}
@@ -205,9 +206,9 @@ Status: Pending (Waiting for Approval)
                 </div>
 
                 <div className="flex justify-end gap-3 pt-4">
-                  <Button variant="outline" type="button" onClick={() => router.back()}>Cancel | ยกเลิก</Button>
+                  <Button variant="outline" type="button" onClick={() => router.back()}>Cancel</Button>
                   <Button type="submit" className="bg-primary hover:bg-primary/90 text-blue-900 px-8" disabled={loading}>
-                    {loading ? <><Loader2 className="animate-spin mr-2 h-4 w-4" /> Processing...</> : "Submit Booking | ยืนยันจองรถ"}
+                    {loading ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : "Submit Booking | ยืนยันจองรถ"}
                   </Button>
                 </div>
               </form>
