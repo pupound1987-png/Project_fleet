@@ -51,14 +51,15 @@ export default function LineSettingsPage() {
   };
 
   const testConnection = async () => {
-    if (!lineToken) {
+    const trimmedToken = lineToken.trim();
+    if (!trimmedToken) {
       toast({ variant: "destructive", title: "Error", description: "Please enter a token first." });
       return;
     }
 
     setIsTesting(true);
     try {
-      const res = await sendLineNotification(lineToken.trim(), "🔔 Test notification from FleetLink system. (ข้อความทดสอบจากระบบ)");
+      const res = await sendLineNotification(trimmedToken, "🔔 Test notification from FleetLink system. (ข้อความทดสอบจากระบบ)");
       if (res.success) {
         toast({
           title: "Test Sent | ส่งข้อความทดสอบแล้ว",
@@ -68,14 +69,14 @@ export default function LineSettingsPage() {
         toast({
           variant: "destructive",
           title: "Test Failed | ส่งข้อความไม่สำเร็จ",
-          description: res.error || "Please check your token.",
+          description: res.error || "Please check your token and network connection.",
         });
       }
     } catch (err: any) {
       toast({
         variant: "destructive",
-        title: "Connection Error",
-        description: err.message || "An unexpected error occurred.",
+        title: "Unexpected Error",
+        description: err.message || "An unexpected error occurred during testing.",
       });
     } finally {
       setIsTesting(false);

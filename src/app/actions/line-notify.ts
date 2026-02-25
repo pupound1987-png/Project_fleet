@@ -5,13 +5,13 @@
  * This handles the HTTP request on the server to avoid CORS issues in the browser.
  */
 export async function sendLineNotification(token: string, message: string) {
-  if (!token) return { success: false, error: 'Token is missing' };
+  if (!token || !token.trim()) return { success: false, error: 'Token is missing' };
 
   try {
-    // Trimming token to avoid whitespace issues
     const cleanToken = token.trim();
     
     // Line Notify requires application/x-www-form-urlencoded
+    // Standard format for Line Notify: message=<value>
     const body = new URLSearchParams();
     body.append('message', message);
 
@@ -20,30 +20,38 @@ export async function sendLineNotification(token: string, message: string) {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
         'Authorization': `Bearer ${cleanToken}`,
+        'User-Agent': 'FleetLink-App/1.0', // Some APIs require a User-Agent
       },
       body: body.toString(),
-      // Add a timeout or cache policy if needed
       cache: 'no-store'
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+      // If Line API returns an error status (e.g., 401 Unauthorized)
+      let errorDetail = 'Check your token';
+      try {
+        const errorJson = await response.json();
+        errorDetail = errorJson.message || errorDetail;
+      } catch (e) {
+        // Not JSON
+      }
       return { 
         success: false, 
-        error: `Line API Error (${response.status}): ${errorData.message || 'Check your token'}` 
+        error: `Line API Error (${response.status}): ${errorDetail}` 
       };
     }
 
     const data = await response.json();
     return { success: true, data };
   } catch (error: any) {
-    // This catches "fetch failed" or network-related exceptions
+    // This catches "fetch failed", DNS issues, or connection timeouts
     console.error('Line Notify Fetch Error:', error);
+    
+    // Providing more context for the "fetch failed" error which is common in node environments
+    const errorMessage = error.message || 'Unknown network error';
     return { 
       success: false, 
-      error: error.message === 'fetch failed' 
-        ? 'Connection failed. The server could not reach Line Notify API.' 
-        : `Network error: ${error.message}` 
+      error: `Connection Failed: ${errorMessage}. Please verify your network can reach notify-api.line.me`
     };
   }
 }
