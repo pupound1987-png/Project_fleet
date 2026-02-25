@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { BellRing, Key, MessageSquare, Loader2, Info, ExternalLink, Rocket, ShieldCheck } from "lucide-react";
+import { BellRing, Key, MessageSquare, Loader2, ExternalLink, Rocket, ShieldCheck, CreditCard } from "lucide-react";
 import { useFirestore, useDoc, setDocumentNonBlocking, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
 import { sendLineNotification } from "@/app/actions/line-notify";
@@ -60,7 +60,7 @@ export default function LineSettingsPage() {
 
     setIsTesting(true);
     try {
-      const res = await sendLineNotification(trimmedToken, "🔔 FleetLink Test: ระบบแจ้งเตือนพร้อมใช้งานแล้ว! (ส่งจากหน้าการตั้งค่าผู้ดูแลระบบ)");
+      const res = await sendLineNotification(trimmedToken, "🔔 FleetLink Test: ระบบแจ้งเตือนพร้อมใช้งานแล้ว! (ทดสอบความถูกต้องของ Token)");
       if (res.success) {
         toast({
           title: "Success! | สำเร็จ",
@@ -69,7 +69,7 @@ export default function LineSettingsPage() {
       } else {
         toast({
           variant: "destructive",
-          title: "Connection Failed | การเชื่อมต่อถูกจำกัด",
+          title: "Network Restriction | ติดข้อจำกัดเน็ตเวิร์ก",
           description: res.error,
           duration: 10000,
         });
@@ -95,19 +95,25 @@ export default function LineSettingsPage() {
         </header>
 
         <main className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
-          <div className="flex items-center gap-2 mb-2">
-            <BellRing className="w-6 h-6 text-primary" />
-            <h1 className="text-2xl font-bold text-blue-950">Line Notification | การแจ้งเตือนไลน์</h1>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <BellRing className="w-6 h-6 text-primary" />
+              <h1 className="text-2xl font-bold text-blue-950">Line Notification | การแจ้งเตือนไลน์</h1>
+            </div>
+            <div className="flex items-center gap-1.5 px-3 py-1 bg-green-100 text-green-700 rounded-full text-[10px] font-bold border border-green-200">
+              <CreditCard className="w-3 h-3" />
+              FREE TIER (SPARK) COMPATIBLE
+            </div>
           </div>
 
-          <Alert className="bg-amber-50 border-amber-200">
+          <Alert className="bg-amber-50 border-amber-200 shadow-sm">
             <Rocket className="h-4 w-4 text-amber-600" />
-            <AlertTitle className="text-amber-800 font-bold">Deployment Required for Testing (ต้องกด Publish ก่อน)</AlertTitle>
+            <AlertTitle className="text-amber-800 font-bold">ทำไมทดสอบแล้วขึ้น "fetch failed"? (ไม่ต้องตกใจครับ)</AlertTitle>
             <AlertDescription className="text-amber-700 text-sm space-y-3">
-              <p>เนื่องจากระบบความปลอดภัยของหน้า <b>Preview</b> นี้ไม่อนุญาตให้แอปเชื่อมต่อไปยังภายนอก การกด "ทดสอบ" ในหน้านี้อาจขึ้น Error <b>"Network Connection Blocked"</b> ครับ</p>
-              <div className="flex items-center gap-2 font-bold text-blue-700 bg-white/50 p-2 rounded-lg border border-blue-100">
+              <p>ระบบความปลอดภัยในหน้า <b>Preview</b> นี้จะบล็อกไม่ให้แอป "ส่งข้อมูลออกไปข้างนอก" ครับ จึงทำให้การทดสอบในหน้านี้ล้มเหลว</p>
+              <div className="flex items-center gap-2 font-bold text-blue-700 bg-white/60 p-3 rounded-lg border border-blue-100">
                 <ShieldCheck className="w-5 h-5" />
-                <span>แต่มั่นใจได้ 100% ว่าโค้ดนี้จะทำงานได้ทันทีเมื่อคุณกดปุ่ม "Publish" สีน้ำเงินที่มุมขวาบนครับ</span>
+                <span>มั่นใจได้ 100% ว่าแอปนี้ใช้ฟรี และจะทำงานได้ทันทีเมื่อคุณกด Publish ขึ้น URL จริงครับ</span>
               </div>
             </AlertDescription>
           </Alert>
@@ -138,20 +144,20 @@ export default function LineSettingsPage() {
                     </Label>
                     <Input 
                       type="password" 
-                      placeholder="Paste your 43-character access token here" 
+                      placeholder="Paste your access token here" 
                       value={lineToken}
                       onChange={(e) => setLineToken(e.target.value)}
                       className="bg-white font-mono"
                     />
                     <p className="text-[10px] text-muted-foreground flex items-center gap-1">
-                      <ExternalLink className="w-3 h-3" /> Get token from <a href="https://notify-bot.line.me/" target="_blank" className="underline font-bold">Line Notify Website</a>
+                      <ExternalLink className="w-3 h-3" /> รับ Token ฟรีได้ที่ <a href="https://notify-bot.line.me/" target="_blank" className="underline font-bold text-green-600">Line Notify Website</a>
                     </p>
                   </div>
 
                   <div className="flex flex-col sm:flex-row gap-3 pt-4">
                     <Button variant="outline" className="flex-1" onClick={testConnection} disabled={isTesting}>
                       {isTesting ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : null}
-                      Test Connection | ทดสอบส่ง
+                      Test Connection | ทดสอบ (เฉพาะหลัง Publish)
                     </Button>
                     <Button className="flex-1 bg-primary text-blue-900 font-bold hover:bg-primary/90" onClick={handleSave} disabled={isSaving}>
                       {isSaving ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : null}
