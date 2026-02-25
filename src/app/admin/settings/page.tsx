@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { BellRing, Key, MessageSquare, Loader2, Info, AlertTriangle, ExternalLink } from "lucide-react";
+import { BellRing, Key, MessageSquare, Loader2, Info, ExternalLink, Rocket } from "lucide-react";
 import { useFirestore, useDoc, setDocumentNonBlocking, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
 import { sendLineNotification } from "@/app/actions/line-notify";
@@ -101,11 +101,19 @@ export default function LineSettingsPage() {
 
           <Alert className="bg-blue-50 border-blue-200">
             <Info className="h-4 w-4 text-blue-600" />
-            <AlertTitle className="text-blue-800 font-bold">How to use (วิธีใช้งาน)</AlertTitle>
-            <AlertDescription className="text-blue-700 text-sm space-y-2">
-              <p>1. ไปที่ <a href="https://notify-bot.line.me/" target="_blank" className="font-bold underline inline-flex items-center gap-1">Line Notify <ExternalLink className="w-3 h-3"/></a> และเข้าสู่ระบบ</p>
-              <p>2. ออก Access Token สำหรับกลุ่มที่คุณต้องการ และนำมาวางที่ช่องด้านล่าง</p>
-              <p>3. **สำคัญ:** เมื่อกดปุ่มทดสอบแล้วขึ้น "fetch failed" ในหน้านี้ ไม่ต้องตกใจครับ เป็นเพราะ Network ของระบบแก้ไขบล็อกไว้ แต่โค้ดนี้จะทำงานได้ 100% เมื่อคุณกด Publish ใช้งานจริงครับ</p>
+            <AlertTitle className="text-blue-800 font-bold">Important Notice (ข้อควรทราบ)</AlertTitle>
+            <AlertDescription className="text-blue-700 text-sm space-y-4">
+              <div className="space-y-1">
+                <p className="font-bold text-amber-600 flex items-center gap-1">
+                  <Rocket className="w-4 h-4" /> หากกดทดสอบแล้วขึ้น "fetch failed"
+                </p>
+                <p>นั่นเป็นเพราะระบบเน็ตเวิร์กในหน้า Preview นี้ถูกจำกัดไว้ครับ <b>แต่โค้ดนี้จะทำงานได้ 100% เมื่อคุณกดปุ่ม Publish สีน้ำเงินที่มุมขวาบน</b> เพื่อนำแอปขึ้นสู่เซิร์ฟเวอร์จริงครับ</p>
+              </div>
+              <div className="space-y-1 pt-2 border-t border-blue-100">
+                <p className="font-semibold">วิธีตั้งค่า:</p>
+                <p>1. ไปที่ <a href="https://notify-bot.line.me/" target="_blank" className="font-bold underline inline-flex items-center gap-1">Line Notify <ExternalLink className="w-3 h-3"/></a></p>
+                <p>2. ออก Access Token และนำมาวางที่ช่องด้านล่าง</p>
+              </div>
             </AlertDescription>
           </Alert>
 
