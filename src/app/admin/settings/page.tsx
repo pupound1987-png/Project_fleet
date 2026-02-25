@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/sidebar";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -10,27 +9,65 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { BellRing, ShieldCheck, Key, MessageSquare } from "lucide-react";
+import { BellRing, ShieldCheck, Key, MessageSquare, Loader2 } from "lucide-react";
+import { useFirestore, useDoc, setDocumentNonBlocking, useMemoFirebase } from "@/firebase";
+import { doc } from "firebase/firestore";
+import { sendLineNotification } from "@/app/actions/line-notify";
 
 export default function LineSettingsPage() {
   const { toast } = useToast();
+  const db = useFirestore();
+  
+  const configRef = useMemoFirebase(() => doc(db, "settings", "line-config"), [db]);
+  const { data: config, isLoading } = useDoc(configRef);
+
   const [lineToken, setLineToken] = useState("");
-  const [groupId, setGroupId] = useState("");
   const [isEnabled, setIsEnabled] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    if (config) {
+      setLineToken(config.token || "");
+      setIsEnabled(config.enabled !== false);
+    }
+  }, [config]);
 
   const handleSave = () => {
-    // In a real app, this would save to a database or environment variables
-    toast({
-      title: "Settings Saved | บันทึกการตั้งค่าแล้ว",
-      description: "Line notification configurations have been updated. (อัปเดตการตั้งค่าแจ้งเตือนผ่าน Line เรียบร้อยแล้ว)",
-    });
+    setIsSaving(true);
+    setDocumentNonBlocking(configRef, {
+      token: lineToken,
+      enabled: isEnabled,
+      updatedAt: new Date().toISOString()
+    }, { merge: true });
+
+    setTimeout(() => {
+      setIsSaving(false);
+      toast({
+        title: "Settings Saved | บันทึกการตั้งค่าแล้ว",
+        description: "Line notification configurations have been updated. (อัปเดตการตั้งค่าแจ้งเตือนผ่าน Line เรียบร้อยแล้ว)",
+      });
+    }, 500);
   };
 
-  const testConnection = () => {
-    toast({
-      title: "Test Sent | ส่งข้อความทดสอบแล้ว",
-      description: "Check your Line group for the test notification. (กรุณาตรวจสอบข้อความทดสอบในกลุ่ม Line)",
-    });
+  const testConnection = async () => {
+    if (!lineToken) {
+      toast({ variant: "destructive", title: "Error", description: "Please enter a token first." });
+      return;
+    }
+
+    const res = await sendLineNotification(lineToken, "🔔 Test notification from FleetLink system.");
+    if (res.success) {
+      toast({
+        title: "Test Sent | ส่งข้อความทดสอบแล้ว",
+        description: "Check your Line group for the test notification. (กรุณาตรวจสอบข้อความทดสอบในกลุ่ม Line)",
+      });
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Test Failed | ส่งข้อความไม่สำเร็จ",
+        description: res.error || "Please check your token.",
+      });
+    }
   };
 
   return (
@@ -51,55 +88,50 @@ export default function LineSettingsPage() {
           <Card className="shadow-lg border-none">
             <CardHeader className="bg-primary/10 rounded-t-lg">
               <CardTitle className="text-xl font-bold text-blue-900 flex items-center gap-2">
-                <MessageSquare className="w-5 h-5" /> Line Notify / Messaging API
+                <MessageSquare className="w-5 h-5" /> Line Notify
               </CardTitle>
               <CardDescription>Configure credentials to receive real-time updates on Line. (ตั้งค่าข้อมูลเพื่อรับแจ้งเตือนแบบเรียลไทม์)</CardDescription>
             </CardHeader>
             <CardContent className="pt-8 space-y-6">
-              <div className="flex items-center justify-between p-4 bg-accent/10 rounded-lg">
-                <div className="space-y-0.5">
-                  <Label className="text-base font-semibold">Enable Notifications | เปิดใช้งานการแจ้งเตือน</Label>
-                  <p className="text-sm text-muted-foreground">Send booking updates to Line group. (ส่งข้อมูลการจองไปยังกลุ่มไลน์)</p>
-                </div>
-                <Switch checked={isEnabled} onCheckedChange={setIsEnabled} />
-              </div>
+              {isLoading ? (
+                <div className="flex justify-center py-10"><Loader2 className="animate-spin text-primary" /></div>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between p-4 bg-accent/10 rounded-lg">
+                    <div className="space-y-0.5">
+                      <Label className="text-base font-semibold">Enable Notifications | เปิดใช้งานการแจ้งเตือน</Label>
+                      <p className="text-sm text-muted-foreground">Send booking updates to Line group. (ส่งข้อมูลการจองไปยังกลุ่มไลน์)</p>
+                    </div>
+                    <Switch checked={isEnabled} onCheckedChange={setIsEnabled} />
+                  </div>
 
-              <div className="grid gap-4">
-                <div className="space-y-2">
-                  <Label className="flex items-center gap-2">
-                    <Key className="w-4 h-4 text-primary" /> Line Notify Token | ไลน์โทเคน
-                  </Label>
-                  <Input 
-                    type="password" 
-                    placeholder="Enter your Line Token" 
-                    value={lineToken}
-                    onChange={(e) => setLineToken(e.target.value)}
-                    className="bg-white"
-                  />
-                  <p className="text-[10px] text-muted-foreground italic">* Token required for sending messages to groups. (จำเป็นต้องใช้ Token ในการส่งข้อความเข้ากลุ่ม)</p>
-                </div>
+                  <div className="grid gap-4">
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2">
+                        <Key className="w-4 h-4 text-primary" /> Line Notify Token | ไลน์โทเคน
+                      </Label>
+                      <Input 
+                        type="password" 
+                        placeholder="Enter your Line Token" 
+                        value={lineToken}
+                        onChange={(e) => setLineToken(e.target.value)}
+                        className="bg-white"
+                      />
+                      <p className="text-[10px] text-muted-foreground italic">* Token required for sending messages to groups. (จำเป็นต้องใช้ Token ในการส่งข้อความเข้ากลุ่ม)</p>
+                    </div>
+                  </div>
 
-                <div className="space-y-2">
-                  <Label className="flex items-center gap-2">
-                    <ShieldCheck className="w-4 h-4 text-primary" /> Group ID | ไอดีกลุ่ม (Optional)
-                  </Label>
-                  <Input 
-                    placeholder="e.g. C1234567890..." 
-                    value={groupId}
-                    onChange={(e) => setGroupId(e.target.value)}
-                    className="bg-white"
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-blue-50">
-                <Button variant="outline" className="flex-1" onClick={testConnection}>
-                  Test Connection | ทดสอบการเชื่อมต่อ
-                </Button>
-                <Button className="flex-1 bg-primary text-blue-900 font-bold hover:bg-primary/90" onClick={handleSave}>
-                  Save Settings | บันทึกการตั้งค่า
-                </Button>
-              </div>
+                  <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-blue-50">
+                    <Button variant="outline" className="flex-1" onClick={testConnection}>
+                      Test Connection | ทดสอบการเชื่อมต่อ
+                    </Button>
+                    <Button className="flex-1 bg-primary text-blue-900 font-bold hover:bg-primary/90" onClick={handleSave} disabled={isSaving}>
+                      {isSaving ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : null}
+                      Save Settings | บันทึกการตั้งค่า
+                    </Button>
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
 

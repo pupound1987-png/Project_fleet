@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/sidebar";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -17,10 +16,12 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar as CalendarIcon, MapPin, ClipboardList, Phone, Clock } from "lucide-react";
+import { Calendar as CalendarIcon, MapPin, ClipboardList, Phone, Clock, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, useUser } from "@/firebase";
-import { collection, serverTimestamp } from "firebase/firestore";
+import { useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, useUser, useDoc } from "@/firebase";
+import { collection, doc, getDoc } from "firebase/firestore";
+import { sendLineNotification } from "@/app/actions/line-notify";
+import { format } from "date-fns";
 
 export default function BookingsPage() {
   const { toast } = useToast();
@@ -42,7 +43,7 @@ export default function BookingsPage() {
     purpose: ''
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) {
       toast({ variant: "destructive", title: "Authentication required", description: "Please log in." });
@@ -58,9 +59,9 @@ export default function BookingsPage() {
       vehicleId: formData.vehicleId,
       vehicleName: selectedVehicle?.vehicleName || 'Unknown',
       employeeEmail: user.email,
-      employeeName: user.displayName || 'admin',
+      employeeName: user.displayName || 'Anonymous User',
       employeeId: user.uid,
-      department: 'General', // Default or fetch from user profile
+      department: 'General',
       phone: formData.phone,
       destination: formData.destination,
       startDateTime: formData.startDateTime,
@@ -72,14 +73,37 @@ export default function BookingsPage() {
 
     addDocumentNonBlocking(bookingsRef, bookingData);
 
+    // Trigger Line Notification
+    try {
+      const configSnap = await getDoc(doc(db, "settings", "line-config"));
+      const config = configSnap.data();
+      
+      if (config?.enabled && config?.token) {
+        const message = `
+🚗 New Booking Request!
+------------------------
+By: ${bookingData.employeeName}
+Vehicle: ${bookingData.vehicleName}
+Destination: ${bookingData.destination}
+Time: ${format(new Date(bookingData.startDateTime), 'dd MMM, HH:mm')} - ${format(new Date(bookingData.endDateTime), 'HH:mm')}
+Purpose: ${bookingData.purpose}
+------------------------
+Status: Pending (Waiting for Approval)
+        `;
+        await sendLineNotification(config.token, message);
+      }
+    } catch (err) {
+      console.error("Failed to send line notification", err);
+    }
+
     setTimeout(() => {
       setLoading(false);
       toast({
         title: "Booking Requested | ส่งคำขอจองแล้ว",
-        description: "Your vehicle request has been sent to admin and Line notification triggered.",
+        description: "Your vehicle request has been sent and Line notification triggered.",
       });
       router.push("/");
-    }, 1000);
+    }, 800);
   };
 
   return (
@@ -183,7 +207,7 @@ export default function BookingsPage() {
                 <div className="flex justify-end gap-3 pt-4">
                   <Button variant="outline" type="button" onClick={() => router.back()}>Cancel | ยกเลิก</Button>
                   <Button type="submit" className="bg-primary hover:bg-primary/90 text-blue-900 px-8" disabled={loading}>
-                    {loading ? "Processing... | กำลังดำเนินการ..." : "Submit Booking | ยืนยันจองรถ"}
+                    {loading ? <><Loader2 className="animate-spin mr-2 h-4 w-4" /> Processing...</> : "Submit Booking | ยืนยันจองรถ"}
                   </Button>
                 </div>
               </form>
