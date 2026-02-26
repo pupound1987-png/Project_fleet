@@ -3,21 +3,21 @@
 /**
  * Server action to send a notification via Line Notify API.
  * ปรับปรุงการจัดการ Error ให้รองรับปัญหา DNS (ENOTFOUND) บน Vercel
+ * เพิ่มระบบ Retry หากเกิดปัญหาทางเครือข่าย
  */
 export async function sendLineNotification(token: string, message: string) {
   if (!token || !token.trim()) {
     return { success: false, error: 'Token is missing | ไม่พบ Token' };
   }
 
-  try {
-    const cleanToken = token.trim();
-    const cleanMessage = message.trim();
-    
-    const body = new URLSearchParams();
-    body.append('message', cleanMessage);
+  const cleanToken = token.trim();
+  const cleanMessage = message.trim();
+  const body = new URLSearchParams();
+  body.append('message', cleanMessage);
 
-    // ใช้ fetch ไปยัง Line Notify API
-    const response = await fetch('https://notify-api.line.me/api/notify', {
+  // ฟังก์ชันภายในสำหรับส่ง Request
+  const attemptFetch = async () => {
+    return await fetch('https://notify-api.line.me/api/notify', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${cleanToken}`,
@@ -26,6 +26,17 @@ export async function sendLineNotification(token: string, message: string) {
       body: body.toString(),
       cache: 'no-store'
     });
+  };
+
+  try {
+    let response = await attemptFetch();
+
+    // หากเจอปัญหา DNS (ENOTFOUND) หรือปัญหาชั่วคราว ให้ลองใหม่อีก 1 ครั้งทันที
+    if (!response.ok && response.status === 500) {
+       // รอสักครู่แล้วลองใหม่
+       await new Promise(resolve => setTimeout(resolve, 500));
+       response = await attemptFetch();
+    }
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -45,11 +56,11 @@ export async function sendLineNotification(token: string, message: string) {
   } catch (error: any) {
     console.error('Line Notify Full Error:', error);
     
-    // จัดการปัญหา ENOTFOUND (DNS Error) ที่พบบ่อยบน Vercel Cloud
+    // จัดการปัญหา ENOTFOUND (DNS Error) ที่ Vercel เจอ
     if (error.code === 'ENOTFOUND' || error.message?.includes('getaddrinfo')) {
       return {
         success: false,
-        error: `Network Error: ระบบ Vercel ไม่สามารถหาที่อยู่ Line API ได้ในขณะนี้ (DNS Error) กรุณากดปุ่มทดสอบใหม่อีกครั้ง หรือรอประมาณ 1-2 นาทีครับ`
+        error: `Network Error: ระบบ Vercel ค้นหาที่อยู่ Line API ไม่เจอ (DNS Error) กรุณากดทดสอบใหม่อีกครั้ง หรือรอ 1-2 นาทีเพื่อให้ Vercel อัปเดตเส้นทางเน็ตเวิร์กครับ`
       };
     }
 

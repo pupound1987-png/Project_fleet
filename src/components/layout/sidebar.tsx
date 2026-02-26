@@ -48,14 +48,14 @@ const AnimatedCarIcon = () => (
       <circle cx="110" cy="35" r="3" fill="#fbbf24" className="animate-pulse" />
     </svg>
 
-    {/* Spinning Wheels (White) - สองล้อที่สมดุล */}
-    <div className="absolute bottom-0 left-2 animate-wheel-spin">
+    {/* Spinning Wheels (White) - วางตำแหน่งให้มีทั้งล้อหน้าและล้อหลัง */}
+    <div className="absolute bottom-0 left-1.5 animate-wheel-spin">
        <svg viewBox="0 0 24 24" className="w-4 h-4 text-white">
          <circle cx="12" cy="12" r="10" fill="currentColor" stroke="#1e293b" strokeWidth="1" />
          <path d="M12,4 L12,20 M4,12 L20,12" stroke="#1e293b" strokeWidth="2" strokeOpacity="0.5" />
        </svg>
     </div>
-    <div className="absolute bottom-0 right-2 animate-wheel-spin">
+    <div className="absolute bottom-0 right-1.5 animate-wheel-spin">
        <svg viewBox="0 0 24 24" className="w-4 h-4 text-white">
          <circle cx="12" cy="12" r="10" fill="currentColor" stroke="#1e293b" strokeWidth="1" />
          <path d="M12,4 L12,20 M4,12 L20,12" stroke="#1e293b" strokeWidth="2" strokeOpacity="0.5" />
