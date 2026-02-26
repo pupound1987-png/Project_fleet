@@ -7,14 +7,14 @@ import { getFirestore } from 'firebase/firestore'
 
 /**
  * Initializes Firebase App and SDKs.
- * Always passes the explicit firebaseConfig to prevent "app/no-options" error on Vercel.
+ * บังคับใช้ firebaseConfig เสมอเพื่อแก้ปัญหา Error app/no-options บน Vercel
  */
 export function initializeFirebase() {
   let app: FirebaseApp;
   
   const existingApps = getApps();
   if (existingApps.length === 0) {
-    // Force usage of our provided config to avoid auto-initialization failure on Vercel
+    // ใช้ค่า config จากไฟล์ config.ts เสมอเพื่อความแน่นอน
     app = initializeApp(firebaseConfig);
   } else {
     app = getApp();
