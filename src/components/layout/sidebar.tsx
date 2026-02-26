@@ -48,7 +48,7 @@ const AnimatedCarIcon = () => (
       <circle cx="110" cy="35" r="3" fill="#fbbf24" className="animate-pulse" />
     </svg>
 
-    {/* Spinning Wheels (White) - วางตำแหน่งให้มีทั้งล้อหน้าและล้อหลัง */}
+    {/* Spinning Wheels (White) */}
     <div className="absolute bottom-0 left-1.5 animate-wheel-spin">
        <svg viewBox="0 0 24 24" className="w-4 h-4 text-white">
          <circle cx="12" cy="12" r="10" fill="currentColor" stroke="#1e293b" strokeWidth="1" />
@@ -102,7 +102,7 @@ export function AppSidebar() {
     <Sidebar className="border-none">
       <SidebarHeader className="p-6 bg-sidebar">
         <div className="flex items-center gap-3">
-          <div className="bg-white/10 p-2 rounded-2xl shadow-xl border border-white/5 group overflow-hidden">
+          <div className="bg-white/10 p-2 rounded-2xl shadow-xl border border-white/5 overflow-hidden">
             <AnimatedCarIcon />
           </div>
           <div>
