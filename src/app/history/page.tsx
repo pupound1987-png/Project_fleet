@@ -5,17 +5,27 @@ import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/s
 import { AppSidebar } from "@/components/layout/sidebar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
-import { History, MapPin, Clock, Loader2, Inbox } from "lucide-react";
-import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
-import { collection, query, where } from "firebase/firestore";
+import { History, MapPin, Clock, Loader2, Inbox, Trash2 } from "lucide-react";
+import { useFirestore, useCollection, useMemoFirebase, useUser, useDoc, deleteDocumentNonBlocking } from "@/firebase";
+import { collection, query, where, doc } from "firebase/firestore";
+import { useToast } from "@/hooks/use-toast";
 
 export default function HistoryPage() {
   const [mounted, setMounted] = useState(false);
   const { user } = useUser();
   const db = useFirestore();
+  const { toast } = useToast();
 
-  // Removed orderBy to avoid composite index requirement which causes permission errors
+  const profileRef = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return doc(db, "users", user.uid);
+  }, [db, user]);
+
+  const { data: profile } = useDoc(profileRef);
+  const isAdmin = profile?.role === 'Admin';
+
   const historyQuery = useMemoFirebase(() => {
     if (!db || !user) return null;
     return query(
@@ -26,7 +36,6 @@ export default function HistoryPage() {
 
   const { data: rawBookings, isLoading } = useCollection(historyQuery);
 
-  // Sort bookings client-side to avoid index issues
   const bookings = rawBookings ? [...rawBookings].sort((a, b) => {
     const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
     const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
@@ -36,6 +45,20 @@ export default function HistoryPage() {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  const handleDelete = (bookingId: string) => {
+    if (!isAdmin) return;
+    
+    if (confirm("ต้องการลบประวัติการจองนี้ใช่หรือไม่?")) {
+      const docRef = doc(db, "bookings", bookingId);
+      deleteDocumentNonBlocking(docRef);
+      
+      toast({
+        title: "Deleted | ลบแล้ว",
+        description: "Booking history has been removed.",
+      });
+    }
+  };
 
   if (!mounted) return null;
 
@@ -70,7 +93,7 @@ export default function HistoryPage() {
                 <Card key={booking.id} className="shadow-sm border-none hover:shadow-md transition-shadow">
                   <CardContent className="p-6">
                     <div className="flex flex-col md:flex-row justify-between gap-4">
-                      <div className="space-y-3">
+                      <div className="space-y-3 flex-1">
                         <div className="flex items-center gap-2">
                           <Badge variant="outline" className="bg-accent/30 text-blue-900">{booking.bookingId}</Badge>
                           <h3 className="text-lg font-bold text-blue-900">{booking.vehicleName}</h3>
@@ -92,15 +115,27 @@ export default function HistoryPage() {
                         </p>
                       </div>
                       <div className="flex flex-col items-end justify-center gap-2">
-                        <Badge className={
-                          booking.status === 'Approved' ? 'bg-green-500' : 
-                          booking.status === 'Pending' ? 'bg-yellow-500 text-yellow-950' : 
-                          booking.status === 'Rejected' ? 'bg-red-500' : 'bg-gray-500'
-                        }>
-                          {booking.status === 'Approved' ? 'อนุมัติแล้ว' : 
-                           booking.status === 'Pending' ? 'รออนุมัติ' : 
-                           booking.status === 'Rejected' ? 'ปฏิเสธ' : booking.status}
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                          {isAdmin && (
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="text-red-400 hover:text-red-600 hover:bg-red-50"
+                              onClick={() => handleDelete(booking.id)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          )}
+                          <Badge className={
+                            booking.status === 'Approved' ? 'bg-green-500' : 
+                            booking.status === 'Pending' ? 'bg-yellow-500 text-yellow-950' : 
+                            booking.status === 'Rejected' ? 'bg-red-500' : 'bg-gray-500'
+                          }>
+                            {booking.status === 'Approved' ? 'อนุมัติแล้ว' : 
+                             booking.status === 'Pending' ? 'รออนุมัติ' : 
+                             booking.status === 'Rejected' ? 'ปฏิเสธ' : booking.status}
+                          </Badge>
+                        </div>
                         <span className="text-[10px] text-muted-foreground">
                           Created: {booking.createdAt ? format(new Date(booking.createdAt), 'dd MMM, HH:mm') : ''}
                         </span>
