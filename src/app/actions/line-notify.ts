@@ -2,67 +2,77 @@
 
 /**
  * Server action to send a notification via Line Notify API.
- * เพิ่มระบบ Retry และการจัดการ DNS Error ให้เสถียรที่สุดสำหรับ Vercel
+ * Includes a robust 5-round retry mechanism to handle Vercel/Studio DNS (ENOTFOUND) issues.
  */
 export async function sendLineNotification(token: string, message: string) {
   if (!token || !token.trim()) {
-    return { success: false, error: 'Token is missing' };
+    return { success: false, error: 'กรุณาระบุ Token ก่อนครับ' };
   }
 
   const cleanToken = token.trim();
-  const body = new URLSearchParams();
-  body.append('message', message.trim());
+  const formData = new URLSearchParams();
+  formData.append('message', message.trim());
 
-  // ฟังก์ชันภายในสำหรับส่ง Request พร้อมระบบ Retry
-  const fetchWithRetry = async (retries = 3) => {
-    for (let i = 0; i < retries; i++) {
-      try {
-        const response = await fetch('https://notify-api.line.me/api/notify', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${cleanToken}`,
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: body.toString(),
-          cache: 'no-store'
-        });
+  const maxRetries = 5;
+  let lastError: any = null;
 
-        if (response.ok) return response;
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 20000);
+
+      const response = await fetch('https://notify-api.line.me/api/notify', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${cleanToken}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: formData.toString(),
+        cache: 'no-store',
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+
+      if (response.ok) {
+        return { success: true };
+      } else {
+        const errorText = await response.text();
+        lastError = new Error(`Line API Error (${response.status}): ${errorText}`);
         
-        // หากเป็น Error จาก API (เช่น Token ผิด) ไม่ต้อง Retry
-        if (response.status !== 500 && response.status !== 502 && response.status !== 503 && response.status !== 504) {
-          return response;
+        // Don't retry for authentication or bad request errors
+        if (response.status === 401 || response.status === 400) {
+          return { success: false, error: `Token หรือข้อมูลผิดพลาด (${response.status})` };
         }
-      } catch (err: any) {
-        // หากเป็น DNS Error (ENOTFOUND) ให้รอแล้วลองใหม่
-        const isDnsError = err.code === 'ENOTFOUND' || err.message?.includes('getaddrinfo');
-        if (isDnsError && i < retries - 1) {
-          await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1))); // เพิ่มเวลาการรอขึ้นเรื่อยๆ
-          continue;
-        }
-        throw err;
       }
+    } catch (err: any) {
+      lastError = err;
+      
+      const isRetryable = 
+        err.code === 'ENOTFOUND' || 
+        err.code === 'EAI_AGAIN' ||
+        err.code === 'ECONNRESET' ||
+        err.name === 'AbortError' ||
+        err.message?.includes('fetch failed');
+      
+      if (isRetryable && i < maxRetries - 1) {
+        // Exponential backoff delay (1s, 2s, 4s, 8s)
+        const delay = Math.pow(2, i) * 1000;
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      }
+      break;
     }
-    throw new Error('All retries failed');
-  };
-
-  try {
-    const response = await fetchWithRetry();
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      return { success: false, error: `Line API Error: ${response.status} - ${errorText}` };
-    }
-
-    return { success: true };
-  } catch (error: any) {
-    console.error('Line Notify Server Error:', error);
-    if (error.code === 'ENOTFOUND' || error.message?.includes('getaddrinfo')) {
-      return { 
-        success: false, 
-        error: 'Network Error: ระบบ Vercel ค้นหาเซิร์ฟเวอร์ Line ไม่พบ (DNS Error) กรุณากดทดสอบอีกครั้งครับ' 
-      };
-    }
-    return { success: false, error: `Connection Error: ${error.message}` };
   }
+
+  let errorMessage = lastError?.message || 'Unknown network error';
+  
+  if (errorMessage.includes('getaddrinfo') || errorMessage.includes('ENOTFOUND') || errorMessage.includes('fetch failed')) {
+    errorMessage = 'Network Error: ระบบ Vercel/Studio ไม่สามารถเชื่อมต่อกับ Line ได้ (DNS Issue) กรุณารอสักครู่แล้วกด "ทดสอบ" ซ้ำอีกครั้งครับ (ระบบพยายามแล้ว 5 ครั้ง)';
+  } else if (lastError?.name === 'AbortError') {
+    errorMessage = 'Timeout: การเชื่อมต่อใช้เวลานานเกินไป กรุณาลองใหม่อีกครั้งครับ';
+  }
+
+  console.error('Final Line Notify Failure:', lastError);
+  return { success: false, error: errorMessage };
 }

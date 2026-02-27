@@ -81,12 +81,17 @@ export default {
           '0%, 100%': { transform: 'translateY(0)' },
           '50%': { transform: 'translateY(-1.5px)' },
         },
+        'slide-left': {
+          '0%': { transform: 'translateX(0)' },
+          '100%': { transform: 'translateX(-50%)' },
+        }
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
         'wheel-spin': 'wheel-spin 0.4s linear infinite',
         'drive-vibration': 'drive-vibration 0.2s linear infinite',
+        'slide-left': 'slide-left 0.6s linear infinite',
       },
     },
   },

@@ -36,19 +36,16 @@ import { cn } from "@/lib/utils";
 
 const AnimatedCarIcon = () => (
   <div className="relative w-14 h-8 animate-drive-vibration">
-    {/* Car Body (Red) */}
     <svg viewBox="0 0 120 60" className="w-14 h-auto drop-shadow-sm">
       <path 
         d="M5,45 L115,45 L115,35 C115,30 110,25 100,25 L90,25 L80,10 L30,10 L20,25 L10,25 C5,25 5,30 5,35 Z" 
         fill="#ef4444" 
       />
-      {/* Windows */}
       <path d="M33,14 L77,14 L85,25 L27,25 Z" fill="#1e293b" fillOpacity="0.6" />
-      {/* Headlight */}
       <circle cx="110" cy="35" r="3" fill="#fbbf24" className="animate-pulse" />
     </svg>
 
-    {/* Spinning Wheels (White) */}
+    {/* Wheels Container with absolute positioning */}
     <div className="absolute bottom-0 left-1.5 animate-wheel-spin">
        <svg viewBox="0 0 24 24" className="w-4 h-4 text-white">
          <circle cx="12" cy="12" r="10" fill="currentColor" stroke="#1e293b" strokeWidth="1" />
