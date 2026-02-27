@@ -20,7 +20,6 @@ import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, useUser } from "@/firebase";
 import { collection, doc } from "firebase/firestore";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 export type VehicleType = 'Van' | 'Pickup' | 'Sedan';
 export type VehicleStatus = 'Available' | 'Maintenance' | 'Booked' | 'In Use';
@@ -87,14 +86,14 @@ export default function VehiclesPage() {
     };
   }, [showCamera, toast]);
 
-  // Robust Image Compression to stay under 1MB Firestore limit
+  // Image Compression logic
   const compressImage = (base64Str: string): Promise<string> => {
     return new Promise((resolve) => {
       const img = new window.Image();
       img.src = base64Str;
       img.onload = () => {
         const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 800; 
+        const MAX_WIDTH = 800;
         const MAX_HEIGHT = 600;
         let width = img.width;
         let height = img.height;
@@ -114,8 +113,7 @@ export default function VehiclesPage() {
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx?.drawImage(img, 0, 0, width, height);
-        // Compressed quality set to 0.6 for maximum safety
-        resolve(canvas.toDataURL('image/jpeg', 0.6));
+        resolve(canvas.toDataURL('image/jpeg', 0.6)); // Quality 0.6 is safe for < 1MB
       };
     });
   };
@@ -217,8 +215,8 @@ export default function VehiclesPage() {
           {isAdding && (
             <Card className="shadow-lg border-primary/20 animate-in fade-in slide-in-from-top-4 duration-300 max-w-4xl mx-auto">
               <CardHeader>
-                <CardTitle className="text-xl font-bold text-blue-900">Registration</CardTitle>
-                <CardDescription>Upload photo (Auto-compressed to under 1MB).</CardDescription>
+                <CardTitle className="text-xl font-bold text-blue-900">Vehicle Registration</CardTitle>
+                <CardDescription>Enter details and add a photo (max 1MB).</CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleAddVehicle} className="grid gap-6">

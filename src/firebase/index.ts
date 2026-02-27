@@ -7,7 +7,7 @@ import { getFirestore } from 'firebase/firestore'
 
 /**
  * Initializes Firebase App and SDKs.
- * บังคับใช้คอนฟิกจาก config.ts ทันทีเพื่อแก้ปัญหา app/no-options บน Vercel
+ * บังคับใช้คอนฟิกตรงๆ เพื่อแก้ปัญหา app/no-options บน Vercel ให้หายขาด
  */
 export function initializeFirebase() {
   let app: FirebaseApp;

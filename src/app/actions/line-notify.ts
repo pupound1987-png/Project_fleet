@@ -19,7 +19,7 @@ export async function sendLineNotification(token: string, message: string) {
   for (let i = 0; i < maxRetries; i++) {
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 20000);
+      const timeoutId = setTimeout(() => controller.abort(), 20000); // 20s timeout
 
       const response = await fetch('https://notify-api.line.me/api/notify', {
         method: 'POST',
@@ -28,7 +28,7 @@ export async function sendLineNotification(token: string, message: string) {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: formData.toString(),
-        cache: 'no-store',
+        cache: 'no-store', // Force no cache for DNS freshness
         signal: controller.signal
       });
 
@@ -56,7 +56,7 @@ export async function sendLineNotification(token: string, message: string) {
         err.message?.includes('fetch failed');
       
       if (isRetryable && i < maxRetries - 1) {
-        // Exponential backoff delay (1s, 2s, 4s, 8s)
+        // Exponential backoff delay (1s, 2s, 4s, 8s, 16s)
         const delay = Math.pow(2, i) * 1000;
         await new Promise(resolve => setTimeout(resolve, delay));
         continue;
@@ -67,6 +67,7 @@ export async function sendLineNotification(token: string, message: string) {
 
   let errorMessage = lastError?.message || 'Unknown network error';
   
+  // Specific handling for DNS/Network errors commonly found on Vercel/Studio
   if (errorMessage.includes('getaddrinfo') || errorMessage.includes('ENOTFOUND') || errorMessage.includes('fetch failed')) {
     errorMessage = 'Network Error: ระบบ Vercel/Studio ไม่สามารถเชื่อมต่อกับ Line ได้ (DNS Issue) กรุณารอสักครู่แล้วกด "ทดสอบ" ซ้ำอีกครั้งครับ (ระบบพยายามแล้ว 5 ครั้ง)';
   } else if (lastError?.name === 'AbortError') {
