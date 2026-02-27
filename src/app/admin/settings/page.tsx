@@ -9,20 +9,21 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { BellRing, Key, MessageSquare, Loader2, ShieldCheck, Eye, AlertCircle } from "lucide-react";
+import { Key, MessageSquare, Loader2, Send, ShieldCheck, Info } from "lucide-react";
 import { useFirestore, useDoc, setDocumentNonBlocking, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
-import { sendLineNotification } from "@/app/actions/line-notify";
+import { sendTelegramNotification } from "@/app/actions/telegram-notify";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
-export default function LineSettingsPage() {
+export default function TelegramSettingsPage() {
   const { toast } = useToast();
   const db = useFirestore();
   
-  const configRef = useMemoFirebase(() => doc(db, "settings", "line-config"), [db]);
+  const configRef = useMemoFirebase(() => doc(db, "settings", "telegram-config"), [db]);
   const { data: config, isLoading } = useDoc(configRef);
 
-  const [lineToken, setLineToken] = useState("");
+  const [botToken, setBotToken] = useState("");
+  const [chatId, setChatId] = useState("");
   const [isEnabled, setIsEnabled] = useState(true);
   const [isSimulated, setIsSimulated] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -30,7 +31,8 @@ export default function LineSettingsPage() {
 
   useEffect(() => {
     if (config) {
-      setLineToken(config.token || "");
+      setBotToken(config.botToken || "");
+      setChatId(config.chatId || "");
       setIsEnabled(config.enabled !== false);
       setIsSimulated(config.isSimulated !== false);
     }
@@ -39,7 +41,8 @@ export default function LineSettingsPage() {
   const handleSave = () => {
     setIsSaving(true);
     setDocumentNonBlocking(configRef, {
-      token: lineToken.trim(),
+      botToken: botToken.trim(),
+      chatId: chatId.trim(),
       enabled: isEnabled,
       isSimulated: isSimulated,
       updatedAt: new Date().toISOString()
@@ -50,55 +53,42 @@ export default function LineSettingsPage() {
       toast({
         title: "บันทึกเรียบร้อย | Saved",
         description: isSimulated 
-          ? "อัปเดตการตั้งค่าแล้ว (ปัจจุบันอยู่ในโหมดจำลอง)" 
-          : "อัปเดตการตั้งค่าแล้ว (ระบบออนไลน์ใช้งานจริง)",
+          ? "อัปเดตโหมดจำลองแล้ว" 
+          : "ระบบ Telegram ออนไลน์พร้อมใช้งาน",
       });
     }, 500);
   };
 
   const testConnection = async () => {
-    const trimmedToken = lineToken.trim();
-    if (!trimmedToken && !isSimulated) {
-      toast({ variant: "destructive", title: "ข้อมูลไม่ครบ", description: "กรุณาระบุ Line Token เพื่อทดสอบครับ" });
+    if (isSimulated) {
+      setIsTesting(true);
+      setTimeout(() => {
+        setIsTesting(false);
+        toast({
+          title: "จำลองการส่งสำเร็จ! | Simulation",
+          description: "🔔 [SIM]: ข้อความจำลอง Telegram แจ้งเตือนสำเร็จ",
+        });
+      }, 800);
+      return;
+    }
+
+    if (!botToken || !chatId) {
+      toast({ variant: "destructive", title: "ข้อมูลไม่ครบ", description: "กรุณาระบุ Bot Token และ Chat ID ครับ" });
       return;
     }
 
     setIsTesting(true);
-    
-    if (isSimulated) {
-      setTimeout(() => {
-        setIsTesting(false);
-        toast({
-          title: "จำลองการส่งสำเร็จ! | Simulation Success",
-          description: "🔔 FleetLink [SIM]: นี่คือข้อความจำลองการแจ้งเตือนครับ",
-        });
-      }, 1000);
-      return;
-    }
+    const res = await sendTelegramNotification(botToken, chatId, "<b>🔔 FleetLink Test</b>\nระบบแจ้งเตือน Telegram พร้อมใช้งานแล้ว!");
+    setIsTesting(false);
 
-    try {
-      const res = await sendLineNotification(trimmedToken, "🔔 FleetLink Test: ระบบแจ้งเตือนออนไลน์พร้อมใช้งานแล้ว!");
-      if (res.success) {
-        toast({ 
-          title: "ส่งสำเร็จ! | Real Send Success", 
-          description: "ตรวจสอบในกลุ่มไลน์ของคุณได้เลยครับ" 
-        });
-      } else {
-        toast({
-          variant: "destructive",
-          title: "การเชื่อมต่อขัดข้อง",
-          description: res.error,
-          duration: 10000,
-        });
-      }
-    } catch (err: any) {
-      toast({ 
-        variant: "destructive", 
-        title: "เกิดข้อผิดพลาด", 
-        description: err.message || "ไม่สามารถเชื่อมต่อเน็ตเวิร์กได้" 
+    if (res.success) {
+      toast({ title: "ส่งสำเร็จ! | Success", description: "ตรวจสอบในแอป Telegram ของคุณได้เลย" });
+    } else {
+      toast({
+        variant: "destructive",
+        title: "การเชื่อมต่อล้มเหลว",
+        description: res.error,
       });
-    } finally {
-      setIsTesting(false);
     }
   };
 
@@ -113,22 +103,22 @@ export default function LineSettingsPage() {
 
         <main className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
           <div className="flex items-center gap-2">
-            <BellRing className="w-6 h-6 text-primary" />
-            <h1 className="text-2xl font-bold text-blue-950">Line Notification | การแจ้งเตือนไลน์</h1>
+            <Send className="w-6 h-6 text-primary" />
+            <h1 className="text-2xl font-bold text-blue-950">Telegram Notification | แจ้งเตือนผ่านเทเลแกรม</h1>
           </div>
 
-          <Alert className="bg-blue-50 border-blue-200 shadow-sm mb-4">
-            <Eye className="h-4 w-4 text-blue-600" />
-            <AlertTitle className="text-blue-800 font-bold">โหมดจำลองพิเศษ (สำหรับคนไม่มีบัตรครับ)</AlertTitle>
+          <Alert className="bg-blue-50 border-blue-200">
+            <ShieldCheck className="h-4 w-4 text-blue-600" />
+            <AlertTitle className="text-blue-800 font-bold">ทำไมต้อง Telegram?</AlertTitle>
             <AlertDescription className="text-blue-700 text-sm">
-              ผมเพิ่ม "Simulation Mode" ให้แล้วครับ เพื่อให้คุณทดสอบ Flow ของแอปได้โดยไม่ต้องใช้บัตรเครดิต เมื่อมีการจองรถ ระบบจะเด้งข้อความขึ้นมาบนจอนี้แทนการส่งเข้าไลน์จริงครับ
+              Telegram มีความเสถียรสูงกว่าในสภาพแวดล้อม Cloud อย่าง Vercel/Studio และแก้ปัญหา DNS Error ได้ดีกว่า Line Notify ครับ
             </AlertDescription>
           </Alert>
 
           <Card className="shadow-lg border-none overflow-hidden">
             <CardHeader className="bg-primary/10 border-b">
               <CardTitle className="text-xl font-bold text-blue-900 flex items-center gap-2">
-                <MessageSquare className="w-5 h-5" /> Line Notify Configuration
+                <MessageSquare className="w-5 h-5" /> Telegram Bot Configuration
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-8 space-y-6">
@@ -137,35 +127,50 @@ export default function LineSettingsPage() {
               ) : (
                 <>
                   <div className="grid gap-4">
-                    <div className={`flex items-center justify-between p-4 rounded-lg border transition-colors ${isSimulated ? 'bg-amber-50 border-amber-100' : 'bg-blue-50/50 border-blue-100'}`}>
+                    <div className={`flex items-center justify-between p-4 rounded-lg border transition-colors ${isSimulated ? 'bg-amber-50 border-amber-100 shadow-inner' : 'bg-blue-50/50 border-blue-100'}`}>
                       <div className="space-y-0.5">
                         <Label className="text-base font-semibold text-blue-900">Simulation Mode | โหมดจำลอง</Label>
-                        <p className="text-xs text-muted-foreground">แสดงข้อความแจ้งเตือนบนจอแทนการส่งจริง (แนะนำสำหรับหน้า Preview)</p>
+                        <p className="text-xs text-muted-foreground">ใช้เพื่อทดสอบ Flow งานโดยไม่ต้องส่งข้อความจริง</p>
                       </div>
                       <Switch checked={isSimulated} onCheckedChange={setIsSimulated} />
                     </div>
 
                     <div className="flex items-center justify-between p-4 bg-accent/5 rounded-lg border border-accent/10">
                       <div className="space-y-0.5">
-                        <Label className="text-base font-semibold">Enabled | เปิดการใช้งาน</Label>
-                        <p className="text-xs text-muted-foreground">อนุญาตให้มีการแจ้งเตือนในระบบ</p>
+                        <Label className="text-base font-semibold">Enabled | เปิดใช้งาน</Label>
+                        <p className="text-xs text-muted-foreground">อนุญาตให้มีการแจ้งเตือนเมื่อมีการจอง</p>
                       </div>
                       <Switch checked={isEnabled} onCheckedChange={setIsEnabled} />
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-2 font-bold">
-                      <Key className="w-4 h-4 text-primary" /> Line Notify Token (Optional in Simulation)
-                    </Label>
-                    <Input 
-                      type="password" 
-                      placeholder="วาง Access Token ของคุณที่นี่" 
-                      value={lineToken}
-                      onChange={(e) => setLineToken(e.target.value)}
-                      className="bg-white font-mono"
-                    />
-                    <p className="text-[10px] text-muted-foreground">*ไม่จำเป็นต้องมี Token ก็ได้ถ้าเปิดโหมดจำลองอยู่ครับ</p>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2 font-bold">
+                        <Key className="w-4 h-4 text-primary" /> Bot Token
+                      </Label>
+                      <Input 
+                        type="password" 
+                        placeholder="123456789:ABCDefgh..." 
+                        value={botToken}
+                        onChange={(e) => setBotToken(e.target.value)}
+                        className="bg-white font-mono"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-2 font-bold">
+                        <Send className="w-4 h-4 text-primary" /> Chat ID
+                      </Label>
+                      <Input 
+                        placeholder="-100123456789" 
+                        value={chatId}
+                        onChange={(e) => setChatId(e.target.value)}
+                        className="bg-white font-mono"
+                      />
+                      <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                        <Info className="w-3 h-3" /> คุณสามารถใช้ @userinfobot เพื่อหา Chat ID ของคุณได้
+                      </p>
+                    </div>
                   </div>
 
                   <div className="flex flex-col sm:flex-row gap-3 pt-4">

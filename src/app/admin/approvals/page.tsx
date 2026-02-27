@@ -10,7 +10,8 @@ import { format } from "date-fns";
 import { ShieldCheck, Check, X, User as UserIcon, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useCollection, useMemoFirebase, updateDocumentNonBlocking, useUser } from "@/firebase";
-import { collection, query, where, doc } from "firebase/firestore";
+import { collection, query, where, doc, getDoc } from "firebase/firestore";
+import { sendTelegramNotification } from "@/app/actions/telegram-notify";
 
 export default function AdminApprovalsPage() {
   const { toast } = useToast();
@@ -29,14 +30,47 @@ export default function AdminApprovalsPage() {
     setMounted(true);
   }, []);
 
-  const handleAction = (id: string, action: 'Approved' | 'Rejected') => {
-    const docRef = doc(db, "bookings", id);
+  const handleAction = async (booking: any, action: 'Approved' | 'Rejected') => {
+    const docRef = doc(db, "bookings", booking.id);
     updateDocumentNonBlocking(docRef, { status: action });
     
     toast({
       title: action === 'Approved' ? "Approved | อนุมัติแล้ว" : "Rejected | ปฏิเสธแล้ว",
       description: `Booking has been ${action.toLowerCase()}.`,
     });
+
+    // Notify Telegram when approved
+    if (action === 'Approved') {
+      try {
+        const configSnap = await getDoc(doc(db, "settings", "telegram-config"));
+        const config = configSnap.data();
+        
+        if (config?.enabled) {
+          const startTimeStr = booking.startDateTime ? format(new Date(booking.startDateTime), 'dd MMM, HH:mm') : 'N/A';
+          const endTimeStr = booking.endDateTime ? format(new Date(booking.endDateTime), 'HH:mm') : 'N/A';
+
+          const message = [
+            `<b>✅ การจองได้รับการอนุมัติแล้ว!</b>`,
+            `<b>ผู้จอง:</b> ${booking.employeeName}`,
+            `<b>รถ:</b> ${booking.vehicleName}`,
+            `<b>จุดหมาย:</b> ${booking.destination}`,
+            `<b>เวลา:</b> ${startTimeStr} - ${endTimeStr}`,
+            `<b>สถานะ:</b> <pre>อนุมัติเรียบร้อย</pre>`
+          ].join('\n');
+
+          if (config.isSimulated) {
+            toast({
+              title: "Simulation Mode: [อนุมัติแล้ว]",
+              description: "ระบบจำลองการส่ง Telegram สำเร็จ",
+            });
+          } else if (config.botToken && config.chatId) {
+            await sendTelegramNotification(config.botToken, config.chatId, message);
+          }
+        }
+      } catch (err) {
+        console.error("Approval notification error:", err);
+      }
+    }
   };
 
   if (!mounted) return null;
@@ -98,10 +132,10 @@ export default function AdminApprovalsPage() {
                       </div>
                     </div>
                     <div className="flex justify-end gap-3">
-                      <Button variant="outline" className="text-red-500 border-red-200 hover:bg-red-50" onClick={() => handleAction(booking.id, 'Rejected')}>
+                      <Button variant="outline" className="text-red-500 border-red-200 hover:bg-red-50" onClick={() => handleAction(booking, 'Rejected')}>
                         <X className="w-4 h-4 mr-2" /> Reject | ปฏิเสธ
                       </Button>
-                      <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={() => handleAction(booking.id, 'Approved')}>
+                      <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={() => handleAction(booking, 'Approved')}>
                         <Check className="w-4 h-4 mr-2" /> Approve | อนุมัติ
                       </Button>
                     </div>

@@ -45,7 +45,6 @@ const AnimatedCarIcon = () => (
       <circle cx="110" cy="35" r="3" fill="#fbbf24" className="animate-pulse" />
     </svg>
 
-    {/* Wheels Container with absolute positioning */}
     <div className="absolute bottom-0 left-1.5 animate-wheel-spin">
        <svg viewBox="0 0 24 24" className="w-4 h-4 text-white">
          <circle cx="12" cy="12" r="10" fill="currentColor" stroke="#1e293b" strokeWidth="1" />

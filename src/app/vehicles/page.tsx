@@ -86,7 +86,6 @@ export default function VehiclesPage() {
     };
   }, [showCamera, toast]);
 
-  // Image Compression logic
   const compressImage = (base64Str: string): Promise<string> => {
     return new Promise((resolve) => {
       const img = new window.Image();
@@ -113,7 +112,7 @@ export default function VehiclesPage() {
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx?.drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL('image/jpeg', 0.6)); // Quality 0.6 is safe for < 1MB
+        resolve(canvas.toDataURL('image/jpeg', 0.6)); 
       };
     });
   };
